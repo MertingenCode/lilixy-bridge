@@ -360,8 +360,8 @@ export default function LifiBridgeApp() {
     if (!chainId) return;
     setLoading(prev => ({ ...prev, tokens: true }));
     try {
-      // If wallet connected, fetch balances using &wallet= param
-      const walletParam = wallet.connected ? `&wallet=${wallet.address}` : '';
+      // Wallet address must be present for balances
+      const walletParam = wallet.address ? `&wallet=${wallet.address}` : '';
       const res = await fetch(`${LIFI_API_URL}/tokens?chains=${chainId}${walletParam}`);
       const data = await res.json();
       const chainTokens = data.tokens[chainId] || [];
@@ -378,8 +378,29 @@ export default function LifiBridgeApp() {
       const defaultToken = chainTokens.find(t => t.symbol === 'USDC' || t.symbol === 'ETH' || t.symbol === 'USDT') || chainTokens[0];
 
       setTokens(prev => ({ ...prev, [side]: chainTokens }));
-      if (side === 'from' && !isSwapping.current) setFromToken(defaultToken);
-      if (side === 'to' && !isSwapping.current) setToToken(defaultToken);
+      
+      // Update selected tokens with new data (including balance) or set default
+      if (!isSwapping.current) {
+          if (side === 'from') {
+              setFromToken(prev => {
+                  if (prev) {
+                      // Try to find same token in new list to update balance
+                      const updated = chainTokens.find(t => t.address === prev.address);
+                      return updated || defaultToken;
+                  }
+                  return defaultToken;
+              });
+          }
+          if (side === 'to') {
+              setToToken(prev => {
+                  if (prev) {
+                      const updated = chainTokens.find(t => t.address === prev.address);
+                      return updated || defaultToken;
+                  }
+                  return defaultToken;
+              });
+          }
+      }
       
     } catch (err) {
       console.error(err);
@@ -704,7 +725,7 @@ export default function LifiBridgeApp() {
             </button>
 
             {/* Language Selector */}
-            <div className={`flex items-center rounded-full transition-all duration-500 ease-in-out overflow-hidden ${langMenuOpen ? 'w-52' : 'w-12'} ${isDark ? 'bg-slate-800' : 'bg-white shadow-sm border border-gray-100'}`}>
+            <div className={`flex items-center rounded-full transition-all duration-500 ease-in-out overflow-hidden ${langMenuOpen ? 'w-53' : 'w-12'} ${isDark ? 'bg-slate-800' : 'bg-white shadow-sm border border-gray-100'}`}>
                 <button
                     onClick={() => setLangMenuOpen(!langMenuOpen)}
                     className={`w-12 h-10 flex-shrink-0 flex items-center justify-center font-bold text-xs ${isDark ? 'text-white' : 'text-gray-700'}`}
@@ -848,7 +869,7 @@ export default function LifiBridgeApp() {
                                                 {formatAddress(fromToken.address)}
                                             </span>
                                             <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                {t('balance')}: {formatBalance(fromToken.amount, fromToken.decimals)}
+                                                {t('balance')} {formatBalance(fromToken.amount, fromToken.decimals)}
                                             </span>
                                         </div>
                                     )}
