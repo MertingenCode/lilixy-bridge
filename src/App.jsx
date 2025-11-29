@@ -440,6 +440,37 @@ export default function LifiBridgeApp() {
     if (toChain) fetchTokens(toChain.id, 'to');
   }, [toChain, fetchTokens]);
 
+  // --- DEDICATED BALANCE FETCHING FOR ACTIVE TOKEN ---
+  // This is the FIX for "always 0 balance"
+  // It fetches the single specific token for the connected wallet to ensure freshness
+  useEffect(() => {
+    const fetchSpecificBalance = async () => {
+        if (!wallet.connected || !wallet.address || !fromChain || !fromToken) return;
+        
+        try {
+            const res = await fetch(`${LIFI_API_URL}/token?chain=${fromChain.id}&token=${fromToken.address}&wallet=${wallet.address}`);
+            const data = await res.json();
+            
+            // If we got a valid amount, update the token state
+            if (data && data.amount !== undefined) {
+                setFromToken(prev => {
+                    // Only update if the amount is actually different to avoid infinite loops
+                    if (prev.amount !== data.amount) {
+                        return { ...prev, amount: data.amount };
+                    }
+                    return prev;
+                });
+            }
+        } catch (e) {
+            console.error("Single token balance fetch failed", e);
+        }
+    };
+
+    // Run this when chain, token address or wallet changes
+    fetchSpecificBalance();
+  }, [wallet.address, fromChain?.id, fromToken?.address, wallet.connected]);
+
+
   // Quote
   useEffect(() => {
     const getQuote = async () => {
