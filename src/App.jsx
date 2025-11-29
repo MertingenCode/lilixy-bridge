@@ -401,11 +401,11 @@ export default function LifiBridgeApp() {
       setTokens(prev => ({ ...prev, [side]: chainTokens }));
       
       // Force update currently selected token to reflect new balance
+      // FIX: Use lowercase comparison to ensure matching
       if (!isSwapping.current) {
           if (side === 'from') {
               setFromToken(prev => {
                   if (prev) {
-                      // Find same token in new list to get updated balance
                       const updated = chainTokens.find(t => t.address.toLowerCase() === prev.address.toLowerCase());
                       return updated || defaultToken;
                   }
@@ -439,36 +439,6 @@ export default function LifiBridgeApp() {
     if (isSwapping.current) return;
     if (toChain) fetchTokens(toChain.id, 'to');
   }, [toChain, fetchTokens]);
-
-  // --- DEDICATED BALANCE FETCHING FOR ACTIVE TOKEN ---
-  // This is the FIX for "always 0 balance"
-  // It fetches the single specific token for the connected wallet to ensure freshness
-  useEffect(() => {
-    const fetchSpecificBalance = async () => {
-        if (!wallet.connected || !wallet.address || !fromChain || !fromToken) return;
-        
-        try {
-            const res = await fetch(`${LIFI_API_URL}/token?chain=${fromChain.id}&token=${fromToken.address}&wallet=${wallet.address}`);
-            const data = await res.json();
-            
-            // If we got a valid amount, update the token state
-            if (data && data.amount !== undefined) {
-                setFromToken(prev => {
-                    // Only update if the amount is actually different to avoid infinite loops
-                    if (prev.amount !== data.amount) {
-                        return { ...prev, amount: data.amount };
-                    }
-                    return prev;
-                });
-            }
-        } catch (e) {
-            console.error("Single token balance fetch failed", e);
-        }
-    };
-
-    // Run this when chain, token address or wallet changes
-    fetchSpecificBalance();
-  }, [wallet.address, fromChain?.id, fromToken?.address, wallet.connected]);
 
 
   // Quote
