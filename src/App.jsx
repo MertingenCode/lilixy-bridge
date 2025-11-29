@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowRight, ChevronDown, Wallet, Loader2, Info, Zap, ShieldCheck, ArrowLeftRight, Settings, Search, History, X, ExternalLink, RefreshCw, CheckCircle2, XCircle, Clock, Moon, Sun, UserPlus, AlertTriangle } from 'lucide-react';
+import { ArrowRight, ChevronDown, Wallet, Loader2, Info, Zap, ShieldCheck, ArrowLeftRight, Settings, Search, History, X, ExternalLink, RefreshCw, CheckCircle2, XCircle, Clock, Moon, Sun, UserPlus, AlertTriangle, RefreshCcw } from 'lucide-react';
 
 // --- Helper Functions & API ---
 
@@ -220,9 +220,8 @@ export default function LifiBridgeApp() {
   // --- State Management ---
   const [chains, setChains] = useState([]);
   const [tokens, setTokens] = useState({ from: [], to: [] });
-  // NEW: Dedicated state for balances { [tokenAddress]: amount }
   const [tokenBalances, setTokenBalances] = useState({});
-  const [loading, setLoading] = useState({ chains: true, tokens: false, quote: false, swap: false, history: false });
+  const [loading, setLoading] = useState({ chains: true, tokens: false, quote: false, swap: false, history: false, balance: false });
   
   const [wallet, setWallet] = useState({ address: null, chainId: null, connected: false });
   
@@ -238,7 +237,7 @@ export default function LifiBridgeApp() {
   const [modalOpen, setModalOpen] = useState({ type: null, side: null });
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Tab Management: 'bridge' or 'history'
+  // Tab Management
   const [activeTab, setActiveTab] = useState('bridge');
 
   // Custom Token Search States
@@ -248,7 +247,7 @@ export default function LifiBridgeApp() {
   // Transaction History State
   const [txHistory, setTxHistory] = useState([]);
 
-  // New Features States
+  // Settings
   const [language, setLanguage] = useState('en');
   const [theme, setTheme] = useState('light');
   const [isRecipientMode, setIsRecipientMode] = useState(false);
@@ -263,6 +262,29 @@ export default function LifiBridgeApp() {
 
   // Ref to prevent overwriting tokens during swap
   const isSwapping = useRef(false);
+
+  // --- AUTO CONNECT WALLET ---
+  useEffect(() => {
+      const checkConnection = async () => {
+          if (window.ethereum) {
+              try {
+                  // Check if we have permission already
+                  const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                  if (accounts.length > 0) {
+                      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                      setWallet({
+                          address: accounts[0],
+                          chainId: parseInt(chainId, 16),
+                          connected: true
+                      });
+                  }
+              } catch (err) {
+                  console.error("Auto connect failed", err);
+              }
+          }
+      };
+      checkConnection();
+  }, []);
 
   // --- Init Loading (Settings & History) ---
   useEffect(() => {
@@ -353,7 +375,6 @@ export default function LifiBridgeApp() {
 
   // --- API Requests ---
 
-  // 1. Fetch Chains
   useEffect(() => {
     const fetchChains = async () => {
       try {
@@ -380,19 +401,15 @@ export default function LifiBridgeApp() {
     fetchChains();
   }, []);
 
-  // 2. Fetch Tokens (Base List) - No balance here initially
   const fetchTokens = useCallback(async (chainId, side) => {
     if (!chainId) return;
     setLoading(prev => ({ ...prev, tokens: true }));
     try {
+      // Basic token fetch without balance first to be fast
       const res = await fetch(`${LIFI_API_URL}/tokens?chains=${chainId}`);
       const data = await res.json();
       let chainTokens = data.tokens[chainId] || [];
       
-      // If wallet is connected, we will fetch balances separately/later or bulk if API allows
-      // But user reported bulk fetch isn't working well for balances.
-      // So we rely on `fetchSpecificBalance` to update the active token.
-
       const defaultToken = chainTokens.find(t => t.symbol === 'USDC' || t.symbol === 'ETH' || t.symbol === 'USDT') || chainTokens[0];
 
       setTokens(prev => ({ ...prev, [side]: chainTokens }));
@@ -419,34 +436,34 @@ export default function LifiBridgeApp() {
     if (toChain) fetchTokens(toChain.id, 'to');
   }, [toChain, fetchTokens]);
 
-  // --- DEDICATED BALANCE FETCHING ---
-  // When active token, chain or wallet changes, fetch ONLY that token's balance
-  useEffect(() => {
-    const fetchSpecificBalance = async () => {
-        if (!wallet.connected || !wallet.address || !fromChain || !fromToken) return;
-        
-        try {
-            // Using /token endpoint which is specific for one token balance
-            const url = `${LIFI_API_URL}/token?chain=${fromChain.id}&token=${fromToken.address}&wallet=${wallet.address}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            
-            // If we got a valid amount, update our dedicated balance store
-            if (data && (data.amount || data.amount === '0' || data.amount === 0)) {
-                 setTokenBalances(prev => ({
-                     ...prev,
-                     [fromToken.address.toLowerCase()]: data.amount
-                 }));
-            }
-        } catch (e) {
-            console.error("Balance fetch error", e);
-        }
-    };
+  // --- FORCE BALANCE FETCH ---
+  // Independent function to refresh balance for currently selected token
+  const refreshBalance = async () => {
+      if (!wallet.connected || !wallet.address || !fromChain || !fromToken) return;
+      
+      setLoading(prev => ({ ...prev, balance: true }));
+      try {
+          const url = `${LIFI_API_URL}/token?chain=${fromChain.id}&token=${fromToken.address}&wallet=${wallet.address}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          
+          if (data) {
+                // Update global store
+                setTokenBalances(prev => ({
+                    ...prev,
+                    [fromToken.address.toLowerCase()]: data.amount || '0'
+                }));
+          }
+      } catch (e) {
+          console.error("Single balance fetch failed", e);
+      } finally {
+          setLoading(prev => ({ ...prev, balance: false }));
+      }
+  };
 
-    fetchSpecificBalance();
-    // Re-fetch every 15s to keep balance fresh
-    const i = setInterval(fetchSpecificBalance, 15000);
-    return () => clearInterval(i);
+  // Run refresh when active token/chain/wallet changes
+  useEffect(() => {
+      refreshBalance();
   }, [wallet.address, fromChain?.id, fromToken?.address, wallet.connected]);
 
 
@@ -485,7 +502,6 @@ export default function LifiBridgeApp() {
         if (data.message) throw new Error(data.message);
         setQuote(data);
       } catch (err) {
-        // Only show error in UI, not toast for quoting
         console.error(err);
         setError(t('noRoute'));
       } finally {
@@ -547,7 +563,6 @@ export default function LifiBridgeApp() {
         setActiveTab('history');
         showToast(t('success'), 'success');
     } catch (err) {
-        // Detect User Rejection
         if (err.code === 4001 || err.message.includes('rejected')) {
             showToast(t('txRejected'), 'error');
         } else {
@@ -589,9 +604,7 @@ export default function LifiBridgeApp() {
   };
 
   const handlePercentageClick = (percent) => {
-      // Look up balance from dedicated state or active token
       const tokenAddr = fromToken?.address?.toLowerCase();
-      // Try dedicated map first, then fallback
       const rawAmount = tokenBalances[tokenAddr];
 
       if (rawAmount) {
@@ -615,7 +628,6 @@ export default function LifiBridgeApp() {
   // Format Balance Helper
   const getBalanceForToken = (token) => {
       if (!token || !token.address) return '0';
-      // Prioritize the dedicated balance state
       const bal = tokenBalances[token.address.toLowerCase()];
       if (!bal || parseFloat(bal) === 0) return '0';
       
@@ -679,7 +691,13 @@ export default function LifiBridgeApp() {
                 </div>
                 <div className={`overflow-y-auto flex-1 p-2 space-y-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
                     {filteredList.map((item) => {
-                        const balance = !isChain ? getBalanceForToken(item) : null;
+                        // For modal list, try to get balance if available in global store
+                        // Note: Bulk balance fetching is unreliable in API, so list might not show all balances correctly initially
+                        // But clicking will auto-fill if balance exists
+                        const balance = (!isChain && tokenBalances[item.address.toLowerCase()]) 
+                            ? (parseFloat(tokenBalances[item.address.toLowerCase()]) / Math.pow(10, item.decimals)).toLocaleString('en-US', { maximumFractionDigits: 5 })
+                            : null;
+
                         return (
                         <button
                             key={item.id || item.address}
@@ -691,8 +709,10 @@ export default function LifiBridgeApp() {
                                     if (modalOpen.side === 'from') setFromToken(item);
                                     else setToToken(item);
                                     
-                                    if (modalOpen.side === 'from' && balance !== '0') {
-                                        handlePercentageClick(1);
+                                    if (modalOpen.side === 'from' && balance && balance !== '0') {
+                                        // Auto fill
+                                        const bal = parseFloat(tokenBalances[item.address.toLowerCase()]) / Math.pow(10, item.decimals);
+                                        setAmount(bal.toString());
                                     }
                                 }
                                 setModalOpen({ type: null });
@@ -727,7 +747,7 @@ export default function LifiBridgeApp() {
                                     ) }
                                 </div>
                                 {/* BALANCE DISPLAY IN LIST */}
-                                {!isChain && balance !== '0' && (
+                                {!isChain && balance && balance !== '0' && (
                                     <div className="text-right">
                                         <div className={`text-xs font-bold ${textMain}`}>{balance}</div>
                                         <div className="text-[10px] text-gray-400">{t('balance')}</div>
@@ -931,9 +951,17 @@ export default function LifiBridgeApp() {
                                             <span className={`text-blue-300`}>
                                                 {formatAddress(fromToken.address)}
                                             </span>
-                                            <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                {t('balance')}: {activeTokenBalance}
-                                            </span>
+                                            <div className="flex items-center gap-1">
+                                                <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                    {t('balance')}: {activeTokenBalance}
+                                                </span>
+                                                {/* Refresh Balance Button */}
+                                                {wallet.connected && (
+                                                    <button onClick={refreshBalance} className="text-gray-400 hover:text-blue-500" title="Refresh Balance">
+                                                        <RefreshCcw size={10} className={loading.balance ? 'animate-spin' : ''} />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
