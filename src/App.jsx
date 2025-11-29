@@ -380,37 +380,18 @@ export default function LifiBridgeApp() {
     fetchChains();
   }, []);
 
-  // 2. Fetch Tokens (Base List + Balances)
+  // 2. Fetch Tokens (Base List) - No balance here initially
   const fetchTokens = useCallback(async (chainId, side) => {
     if (!chainId) return;
     setLoading(prev => ({ ...prev, tokens: true }));
     try {
-      // Always fetch tokens for the chain
-      // If wallet is connected, append &wallet= to get amounts
-      const walletParam = wallet.connected && wallet.address ? `&wallet=${wallet.address}` : '';
-      const res = await fetch(`${LIFI_API_URL}/tokens?chains=${chainId}${walletParam}`);
+      const res = await fetch(`${LIFI_API_URL}/tokens?chains=${chainId}`);
       const data = await res.json();
       let chainTokens = data.tokens[chainId] || [];
       
-      // Update global balance state if we have wallet data
-      if (wallet.connected && chainTokens.length > 0) {
-          const newBalances = {};
-          chainTokens.forEach(t => {
-              if (t.amount) {
-                  newBalances[t.address.toLowerCase()] = t.amount;
-              }
-          });
-          setTokenBalances(prev => ({...prev, ...newBalances}));
-      }
-
-      // Sort by balance if available
-      if (wallet.connected) {
-          chainTokens.sort((a, b) => {
-              const balA = parseFloat(a.amount || 0);
-              const balB = parseFloat(b.amount || 0);
-              return balB - balA; // Descending
-          });
-      }
+      // If wallet is connected, we will fetch balances separately/later or bulk if API allows
+      // But user reported bulk fetch isn't working well for balances.
+      // So we rely on `fetchSpecificBalance` to update the active token.
 
       const defaultToken = chainTokens.find(t => t.symbol === 'USDC' || t.symbol === 'ETH' || t.symbol === 'USDT') || chainTokens[0];
 
@@ -426,18 +407,47 @@ export default function LifiBridgeApp() {
     } finally {
       setLoading(prev => ({ ...prev, tokens: false }));
     }
-  }, [wallet.connected, wallet.address]);
+  }, []);
 
-  // Trigger Token Fetch on Chain Change or Wallet Connection
   useEffect(() => {
     if (isSwapping.current) return;
     if (fromChain) fetchTokens(fromChain.id, 'from');
-  }, [fromChain, fetchTokens, wallet.connected]); // Added wallet.connected to trigger re-fetch
+  }, [fromChain, fetchTokens]);
 
   useEffect(() => {
     if (isSwapping.current) return;
     if (toChain) fetchTokens(toChain.id, 'to');
-  }, [toChain, fetchTokens, wallet.connected]);
+  }, [toChain, fetchTokens]);
+
+  // --- DEDICATED BALANCE FETCHING ---
+  // When active token, chain or wallet changes, fetch ONLY that token's balance
+  useEffect(() => {
+    const fetchSpecificBalance = async () => {
+        if (!wallet.connected || !wallet.address || !fromChain || !fromToken) return;
+        
+        try {
+            // Using /token endpoint which is specific for one token balance
+            const url = `${LIFI_API_URL}/token?chain=${fromChain.id}&token=${fromToken.address}&wallet=${wallet.address}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            // If we got a valid amount, update our dedicated balance store
+            if (data && (data.amount || data.amount === '0' || data.amount === 0)) {
+                 setTokenBalances(prev => ({
+                     ...prev,
+                     [fromToken.address.toLowerCase()]: data.amount
+                 }));
+            }
+        } catch (e) {
+            console.error("Balance fetch error", e);
+        }
+    };
+
+    fetchSpecificBalance();
+    // Re-fetch every 15s to keep balance fresh
+    const i = setInterval(fetchSpecificBalance, 15000);
+    return () => clearInterval(i);
+  }, [wallet.address, fromChain?.id, fromToken?.address, wallet.connected]);
 
 
   // Quote
@@ -475,6 +485,7 @@ export default function LifiBridgeApp() {
         if (data.message) throw new Error(data.message);
         setQuote(data);
       } catch (err) {
+        // Only show error in UI, not toast for quoting
         console.error(err);
         setError(t('noRoute'));
       } finally {
@@ -580,7 +591,8 @@ export default function LifiBridgeApp() {
   const handlePercentageClick = (percent) => {
       // Look up balance from dedicated state or active token
       const tokenAddr = fromToken?.address?.toLowerCase();
-      const rawAmount = tokenBalances[tokenAddr] || fromToken?.amount;
+      // Try dedicated map first, then fallback
+      const rawAmount = tokenBalances[tokenAddr];
 
       if (rawAmount) {
           const bal = parseFloat(rawAmount) / Math.pow(10, fromToken.decimals);
@@ -603,8 +615,8 @@ export default function LifiBridgeApp() {
   // Format Balance Helper
   const getBalanceForToken = (token) => {
       if (!token || !token.address) return '0';
-      // Prioritize the bulk fetched balance state, fallback to token object
-      const bal = tokenBalances[token.address.toLowerCase()] || token.amount;
+      // Prioritize the dedicated balance state
+      const bal = tokenBalances[token.address.toLowerCase()];
       if (!bal || parseFloat(bal) === 0) return '0';
       
       const val = parseFloat(bal) / Math.pow(10, token.decimals);
@@ -680,7 +692,6 @@ export default function LifiBridgeApp() {
                                     else setToToken(item);
                                     
                                     if (modalOpen.side === 'from' && balance !== '0') {
-                                        // Auto fill if clicked and has balance
                                         handlePercentageClick(1);
                                     }
                                 }
