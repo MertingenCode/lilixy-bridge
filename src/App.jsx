@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowRight, ChevronDown, Wallet, Loader2, Info, Zap, ShieldCheck, ArrowLeftRight, Settings, Search, History, X, ExternalLink, RefreshCw, CheckCircle2, XCircle, Clock, Moon, Sun, UserPlus } from 'lucide-react';
+import { ArrowRight, ChevronDown, Wallet, Loader2, Info, Zap, ShieldCheck, ArrowLeftRight, Settings, Search, History, X, ExternalLink, RefreshCw, CheckCircle2, XCircle, Clock, Moon, Sun, UserPlus, AlertTriangle } from 'lucide-react';
 
 // --- Helper Functions & API ---
 
@@ -61,7 +61,9 @@ const TRANSLATIONS = {
         balance: 'Bal:',
         max: 'MAX',
         disclaimer: 'We do not hold custody of funds. Use at your own risk. Bridge fees and slippage may vary based on network conditions.',
-        rights: 'All rights reserved.'
+        rights: 'All rights reserved.',
+        txRejected: 'Transaction rejected by user',
+        error: 'Error'
     },
     tr: {
         connect: 'Cüzdan Bağla',
@@ -87,7 +89,9 @@ const TRANSLATIONS = {
         balance: 'Bak:',
         max: 'MAKS',
         disclaimer: 'Fonların velayetini tutmuyoruz. Risk size aittir. Köprü ücretleri ve kayma oranları ağ koşullarına göre değişebilir.',
-        rights: 'Tüm hakları saklıdır.'
+        rights: 'Tüm hakları saklıdır.',
+        txRejected: 'İşlem kullanıcı tarafından reddedildi',
+        error: 'Hata'
     },
     es: {
         connect: 'Conectar Billetera',
@@ -113,7 +117,9 @@ const TRANSLATIONS = {
         balance: 'Bal:',
         max: 'MÁX',
         disclaimer: 'No custodiamos fondos. Úselo bajo su propio riesgo. Las tarifas pueden variar.',
-        rights: 'Todos los derechos reservados.'
+        rights: 'Todos los derechos reservados.',
+        txRejected: 'Transacción rechazada por el usuario',
+        error: 'Error'
     },
     fr: {
         connect: 'Connecter Portefeuille',
@@ -139,7 +145,9 @@ const TRANSLATIONS = {
         balance: 'Solde:',
         max: 'MAX',
         disclaimer: 'Nous ne détenons pas les fonds. À vos risques. Les frais peuvent varier.',
-        rights: 'Tous droits réservés.'
+        rights: 'Tous droits réservés.',
+        txRejected: 'Transaction rejetée par l\'utilisateur',
+        error: 'Erreur'
     },
     zh: {
         connect: '连接钱包',
@@ -165,7 +173,9 @@ const TRANSLATIONS = {
         balance: '余额:',
         max: '最大',
         disclaimer: '我们要不持有资金。风险自负。费用可能因网络状况而异。',
-        rights: '版权所有.'
+        rights: '版权所有.',
+        txRejected: '用户拒绝了交易',
+        error: '错误'
     },
     ja: {
         connect: 'ウォレット接続',
@@ -191,7 +201,9 @@ const TRANSLATIONS = {
         balance: '残高:',
         max: '最大',
         disclaimer: '資金は保管しません。自己責任で使用してください。手数料は変動する可能性があります。',
-        rights: '全著作権所有.'
+        rights: '全著作権所有.',
+        txRejected: 'ユーザーが取引を拒否しました',
+        error: 'エラー'
     }
 };
 
@@ -244,6 +256,9 @@ export default function LifiBridgeApp() {
   // Language Menu State
   const [langMenuOpen, setLangMenuOpen] = useState(false);
 
+  // Toast State
+  const [toast, setToast] = useState(null);
+
   // Ref to prevent overwriting tokens during swap
   const isSwapping = useRef(false);
 
@@ -261,6 +276,12 @@ export default function LifiBridgeApp() {
       const savedRecipients = localStorage.getItem('lilixy_recipients');
       if (savedRecipients) setRecipientHistory(JSON.parse(savedRecipients));
   }, []);
+
+  // Toast Helper
+  const showToast = (message, type = 'info') => {
+      setToast({ message, type });
+      setTimeout(() => setToast(null), 3000);
+  };
 
   // Save Settings Handlers
   const changeLanguage = (lang) => {
@@ -350,7 +371,7 @@ export default function LifiBridgeApp() {
         setLoading(prev => ({ ...prev, chains: false }));
       } catch (err) {
         console.error(err);
-        setError("Connection error.");
+        showToast("Connection error", 'error');
       }
     };
     fetchChains();
@@ -379,13 +400,13 @@ export default function LifiBridgeApp() {
 
       setTokens(prev => ({ ...prev, [side]: chainTokens }));
       
-      // Update selected tokens with new data (including balance) or set default
+      // Force update currently selected token to reflect new balance
       if (!isSwapping.current) {
           if (side === 'from') {
               setFromToken(prev => {
                   if (prev) {
-                      // Try to find same token in new list to update balance
-                      const updated = chainTokens.find(t => t.address === prev.address);
+                      // Find same token in new list to get updated balance
+                      const updated = chainTokens.find(t => t.address.toLowerCase() === prev.address.toLowerCase());
                       return updated || defaultToken;
                   }
                   return defaultToken;
@@ -394,7 +415,7 @@ export default function LifiBridgeApp() {
           if (side === 'to') {
               setToToken(prev => {
                   if (prev) {
-                      const updated = chainTokens.find(t => t.address === prev.address);
+                      const updated = chainTokens.find(t => t.address.toLowerCase() === prev.address.toLowerCase());
                       return updated || defaultToken;
                   }
                   return defaultToken;
@@ -427,7 +448,6 @@ export default function LifiBridgeApp() {
         return;
       }
       
-      // Valid recipient check
       const targetAddress = isRecipientMode && recipientAddress ? recipientAddress : (wallet.address || '0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0');
 
       setLoading(prev => ({ ...prev, quote: true }));
@@ -444,7 +464,7 @@ export default function LifiBridgeApp() {
             toToken: toToken.address,
             fromAmount: amountRaw,
             fromAddress: wallet.address || targetAddress, 
-            toAddress: targetAddress, // Add toAddress parameter
+            toAddress: targetAddress,
             integrator: 'lilixy',
             fee: '0.0025',
         });
@@ -455,6 +475,7 @@ export default function LifiBridgeApp() {
         if (data.message) throw new Error(data.message);
         setQuote(data);
       } catch (err) {
+        // Only show error in UI, not toast for quoting
         console.error(err);
         setError(t('noRoute'));
       } finally {
@@ -480,8 +501,11 @@ export default function LifiBridgeApp() {
             if (a.length === 0) setWallet({ address: null, chainId: null, connected: false });
             else setWallet(prev => ({ ...prev, address: a[0] }));
         });
-      } catch (error) { console.error(error); }
-    } else { alert("Wallet not found!"); }
+      } catch (error) { 
+          console.error(error); 
+          showToast(t('error'), 'error');
+      }
+    } else { showToast("Wallet not found!", 'error'); }
   };
 
   const handleSwap = async () => {
@@ -506,15 +530,19 @@ export default function LifiBridgeApp() {
         
         addToHistory(txHash, { chain: fromChain, token: fromToken }, { chain: toChain, token: toToken }, amount);
         
-        // Save recipient if custom
         if (isRecipientMode && recipientAddress) {
             saveRecipient(recipientAddress);
         }
 
         setActiveTab('history');
-        alert(t('success') + ` Hash: ${txHash}`);
+        showToast(t('success'), 'success');
     } catch (err) {
-        alert(`Error: ${err.message}`);
+        // Detect User Rejection
+        if (err.code === 4001 || err.message.includes('rejected')) {
+            showToast(t('txRejected'), 'error');
+        } else {
+            showToast(err.message || t('error'), 'error');
+        }
     } finally {
         setLoading(prev => ({ ...prev, swap: false }));
     }
@@ -554,7 +582,7 @@ export default function LifiBridgeApp() {
       if (fromToken && fromToken.amount) {
           const bal = parseFloat(fromToken.amount) / Math.pow(10, fromToken.decimals);
           if (bal > 0) {
-              const newAmount = (bal * percent).toFixed(6); // Keep it clean
+              const newAmount = (bal * percent).toFixed(6); 
               setAmount(parseFloat(newAmount).toString());
           }
       }
@@ -708,6 +736,17 @@ export default function LifiBridgeApp() {
         <div className={`absolute top-[20%] right-[20%] w-[400px] h-[400px] rounded-full blur-[80px] ${isDark ? 'bg-purple-900/10' : 'bg-indigo-300/20'}`} />
       </div>
 
+      {/* --- TOAST NOTIFICATION --- */}
+      {toast && (
+          <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-2 fade-in duration-300">
+              <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl border ${toast.type === 'error' ? 'bg-red-50 border-red-100 text-red-600' : 'bg-white border-gray-100 text-gray-800'}`}>
+                  {toast.type === 'error' ? <AlertTriangle size={20} /> : <Info size={20} className="text-blue-500" />}
+                  <span className="font-medium text-sm">{toast.message}</span>
+                  <button onClick={() => setToast(null)} className="ml-2 opacity-50 hover:opacity-100"><X size={16}/></button>
+              </div>
+          </div>
+      )}
+
       {/* --- Header --- */}
       <header className="relative z-10 w-full px-6 py-6 flex justify-between items-center max-w-6xl mx-auto">
         <div className="text-3xl font-black tracking-tight pr-4 pb-1 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 leading-normal">
@@ -725,7 +764,7 @@ export default function LifiBridgeApp() {
             </button>
 
             {/* Language Selector */}
-            <div className={`flex items-center rounded-full transition-all duration-500 ease-in-out overflow-hidden ${langMenuOpen ? 'w-53' : 'w-12'} ${isDark ? 'bg-slate-800' : 'bg-white shadow-sm border border-gray-100'}`}>
+            <div className={`flex items-center rounded-full transition-all duration-500 ease-in-out overflow-hidden ${langMenuOpen ? 'w-56' : 'w-12'} ${isDark ? 'bg-slate-800' : 'bg-white shadow-sm border border-gray-100'}`}>
                 <button
                     onClick={() => setLangMenuOpen(!langMenuOpen)}
                     className={`w-12 h-10 flex-shrink-0 flex items-center justify-center font-bold text-xs ${isDark ? 'text-white' : 'text-gray-700'}`}
