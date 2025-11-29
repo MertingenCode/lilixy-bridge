@@ -58,7 +58,7 @@ const TRANSLATIONS = {
         sendTo: 'Send to another wallet',
         recipientAddr: 'Recipient Address',
         found: 'FOUND',
-        balance: 'Bal:',
+        balance: 'Bal',
         max: 'MAX',
         disclaimer: 'We do not hold custody of funds. Use at your own risk. Bridge fees and slippage may vary based on network conditions.',
         rights: 'All rights reserved.',
@@ -86,7 +86,7 @@ const TRANSLATIONS = {
         sendTo: 'Başka cüzdana gönder',
         recipientAddr: 'Alıcı Adresi',
         found: 'BULUNDU',
-        balance: 'Bak:',
+        balance: 'Bak',
         max: 'MAKS',
         disclaimer: 'Fonların velayetini tutmuyoruz. Risk size aittir. Köprü ücretleri ve kayma oranları ağ koşullarına göre değişebilir.',
         rights: 'Tüm hakları saklıdır.',
@@ -114,7 +114,7 @@ const TRANSLATIONS = {
         sendTo: 'Enviar a otra billetera',
         recipientAddr: 'Dirección del Destinatario',
         found: 'ENCONTRADO',
-        balance: 'Bal:',
+        balance: 'Bal',
         max: 'MÁX',
         disclaimer: 'No custodiamos fondos. Úselo bajo su propio riesgo. Las tarifas pueden variar.',
         rights: 'Todos los derechos reservados.',
@@ -142,7 +142,7 @@ const TRANSLATIONS = {
         sendTo: 'Envoyer à une autre adresse',
         recipientAddr: 'Adresse Destinataire',
         found: 'TROUVÉ',
-        balance: 'Solde:',
+        balance: 'Solde',
         max: 'MAX',
         disclaimer: 'Nous ne détenons pas les fonds. À vos risques. Les frais peuvent varier.',
         rights: 'Tous droits réservés.',
@@ -170,7 +170,7 @@ const TRANSLATIONS = {
         sendTo: '发送到其他钱包',
         recipientAddr: '接收地址',
         found: '已找到',
-        balance: '余额:',
+        balance: '余额',
         max: '最大',
         disclaimer: '我们要不持有资金。风险自负。费用可能因网络状况而异。',
         rights: '版权所有.',
@@ -198,7 +198,7 @@ const TRANSLATIONS = {
         sendTo: '別のウォレットへ送信',
         recipientAddr: '受取人アドレス',
         found: '見つかりました',
-        balance: '残高:',
+        balance: '残高',
         max: '最大',
         disclaimer: '資金は保管しません。自己責任で使用してください。手数料は変動する可能性があります。',
         rights: '全著作権所有.',
@@ -220,6 +220,8 @@ export default function LifiBridgeApp() {
   // --- State Management ---
   const [chains, setChains] = useState([]);
   const [tokens, setTokens] = useState({ from: [], to: [] });
+  // NEW: Dedicated state for balances { [tokenAddress]: amount }
+  const [tokenBalances, setTokenBalances] = useState({});
   const [loading, setLoading] = useState({ chains: true, tokens: false, quote: false, swap: false, history: false });
   
   const [wallet, setWallet] = useState({ address: null, chainId: null, connected: false });
@@ -351,6 +353,7 @@ export default function LifiBridgeApp() {
 
   // --- API Requests ---
 
+  // 1. Fetch Chains
   useEffect(() => {
     const fetchChains = async () => {
       try {
@@ -377,16 +380,29 @@ export default function LifiBridgeApp() {
     fetchChains();
   }, []);
 
+  // 2. Fetch Tokens (Base List + Balances)
   const fetchTokens = useCallback(async (chainId, side) => {
     if (!chainId) return;
     setLoading(prev => ({ ...prev, tokens: true }));
     try {
-      // Wallet address must be present for balances
-      const walletParam = wallet.address ? `&wallet=${wallet.address}` : '';
+      // Always fetch tokens for the chain
+      // If wallet is connected, append &wallet= to get amounts
+      const walletParam = wallet.connected && wallet.address ? `&wallet=${wallet.address}` : '';
       const res = await fetch(`${LIFI_API_URL}/tokens?chains=${chainId}${walletParam}`);
       const data = await res.json();
-      const chainTokens = data.tokens[chainId] || [];
+      let chainTokens = data.tokens[chainId] || [];
       
+      // Update global balance state if we have wallet data
+      if (wallet.connected && chainTokens.length > 0) {
+          const newBalances = {};
+          chainTokens.forEach(t => {
+              if (t.amount) {
+                  newBalances[t.address.toLowerCase()] = t.amount;
+              }
+          });
+          setTokenBalances(prev => ({...prev, ...newBalances}));
+      }
+
       // Sort by balance if available
       if (wallet.connected) {
           chainTokens.sort((a, b) => {
@@ -400,27 +416,9 @@ export default function LifiBridgeApp() {
 
       setTokens(prev => ({ ...prev, [side]: chainTokens }));
       
-      // Force update currently selected token to reflect new balance
-      // FIX: Use lowercase comparison to ensure matching
       if (!isSwapping.current) {
-          if (side === 'from') {
-              setFromToken(prev => {
-                  if (prev) {
-                      const updated = chainTokens.find(t => t.address.toLowerCase() === prev.address.toLowerCase());
-                      return updated || defaultToken;
-                  }
-                  return defaultToken;
-              });
-          }
-          if (side === 'to') {
-              setToToken(prev => {
-                  if (prev) {
-                      const updated = chainTokens.find(t => t.address.toLowerCase() === prev.address.toLowerCase());
-                      return updated || defaultToken;
-                  }
-                  return defaultToken;
-              });
-          }
+          if (side === 'from') setFromToken(prev => prev || defaultToken);
+          if (side === 'to') setToToken(prev => prev || defaultToken);
       }
       
     } catch (err) {
@@ -430,15 +428,16 @@ export default function LifiBridgeApp() {
     }
   }, [wallet.connected, wallet.address]);
 
+  // Trigger Token Fetch on Chain Change or Wallet Connection
   useEffect(() => {
     if (isSwapping.current) return;
     if (fromChain) fetchTokens(fromChain.id, 'from');
-  }, [fromChain, fetchTokens]);
+  }, [fromChain, fetchTokens, wallet.connected]); // Added wallet.connected to trigger re-fetch
 
   useEffect(() => {
     if (isSwapping.current) return;
     if (toChain) fetchTokens(toChain.id, 'to');
-  }, [toChain, fetchTokens]);
+  }, [toChain, fetchTokens, wallet.connected]);
 
 
   // Quote
@@ -476,7 +475,6 @@ export default function LifiBridgeApp() {
         if (data.message) throw new Error(data.message);
         setQuote(data);
       } catch (err) {
-        // Only show error in UI, not toast for quoting
         console.error(err);
         setError(t('noRoute'));
       } finally {
@@ -580,8 +578,12 @@ export default function LifiBridgeApp() {
   };
 
   const handlePercentageClick = (percent) => {
-      if (fromToken && fromToken.amount) {
-          const bal = parseFloat(fromToken.amount) / Math.pow(10, fromToken.decimals);
+      // Look up balance from dedicated state or active token
+      const tokenAddr = fromToken?.address?.toLowerCase();
+      const rawAmount = tokenBalances[tokenAddr] || fromToken?.amount;
+
+      if (rawAmount) {
+          const bal = parseFloat(rawAmount) / Math.pow(10, fromToken.decimals);
           if (bal > 0) {
               const newAmount = (bal * percent).toFixed(6); 
               setAmount(parseFloat(newAmount).toString());
@@ -599,9 +601,13 @@ export default function LifiBridgeApp() {
   };
 
   // Format Balance Helper
-  const formatBalance = (amount, decimals) => {
-      if (!amount || parseFloat(amount) === 0) return '0';
-      const val = parseFloat(amount) / Math.pow(10, decimals);
+  const getBalanceForToken = (token) => {
+      if (!token || !token.address) return '0';
+      // Prioritize the bulk fetched balance state, fallback to token object
+      const bal = tokenBalances[token.address.toLowerCase()] || token.amount;
+      if (!bal || parseFloat(bal) === 0) return '0';
+      
+      const val = parseFloat(bal) / Math.pow(10, token.decimals);
       if (val < 0.00001) return '<0.00001';
       return val.toLocaleString('en-US', { maximumFractionDigits: 5 });
   };
@@ -660,7 +666,9 @@ export default function LifiBridgeApp() {
                     </div>
                 </div>
                 <div className={`overflow-y-auto flex-1 p-2 space-y-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
-                    {filteredList.map((item) => (
+                    {filteredList.map((item) => {
+                        const balance = !isChain ? getBalanceForToken(item) : null;
+                        return (
                         <button
                             key={item.id || item.address}
                             onClick={() => {
@@ -670,9 +678,10 @@ export default function LifiBridgeApp() {
                                 } else {
                                     if (modalOpen.side === 'from') setFromToken(item);
                                     else setToToken(item);
-                                    if (modalOpen.side === 'from' && item.amount) {
-                                        const bal = parseFloat(item.amount) / Math.pow(10, item.decimals);
-                                        setAmount(bal.toString());
+                                    
+                                    if (modalOpen.side === 'from' && balance !== '0') {
+                                        // Auto fill if clicked and has balance
+                                        handlePercentageClick(1);
                                     }
                                 }
                                 setModalOpen({ type: null });
@@ -706,16 +715,17 @@ export default function LifiBridgeApp() {
                                         </div>
                                     ) }
                                 </div>
-                                {/* BALANCE DISPLAY */}
-                                {!isChain && item.amount && (
+                                {/* BALANCE DISPLAY IN LIST */}
+                                {!isChain && balance !== '0' && (
                                     <div className="text-right">
-                                        <div className={`text-xs font-bold ${textMain}`}>{formatBalance(item.amount, item.decimals)}</div>
+                                        <div className={`text-xs font-bold ${textMain}`}>{balance}</div>
                                         <div className="text-[10px] text-gray-400">{t('balance')}</div>
                                     </div>
                                 )}
                             </div>
                         </button>
-                    ))}
+                    );
+                    })}
                     {filteredList.length === 0 && !isSearchingToken && (
                         <div className="text-center py-8 text-gray-400 text-sm">
                             {isChain ? "Chain not found" : "Token or Address not found"}
@@ -726,6 +736,8 @@ export default function LifiBridgeApp() {
         </div>
     );
   };
+
+  const activeTokenBalance = getBalanceForToken(fromToken);
 
   return (
     <div className={`min-h-screen ${bgApp} ${textMain} font-sans relative overflow-hidden selection:bg-blue-200 selection:text-blue-900 flex flex-col transition-colors duration-500`}>
@@ -867,7 +879,7 @@ export default function LifiBridgeApp() {
                                             className={`w-full bg-transparent font-black outline-none tracking-tight [&::-webkit-inner-spin-button]:appearance-none ${getFontSize(amount)} ${inputColor}`}
                                         />
                                         {/* Percentage Buttons inside input container, below input */}
-                                        {wallet.connected && fromToken && parseFloat(fromToken.amount) > 0 && (
+                                        {wallet.connected && activeTokenBalance !== '0' && (
                                             <div className="flex gap-1 mt-1">
                                                 {[0.25, 0.50, 0.75, 1].map((pct) => (
                                                     <button
@@ -909,7 +921,7 @@ export default function LifiBridgeApp() {
                                                 {formatAddress(fromToken.address)}
                                             </span>
                                             <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                {t('balance')} {formatBalance(fromToken.amount, fromToken.decimals)}
+                                                {t('balance')}: {activeTokenBalance}
                                             </span>
                                         </div>
                                     )}
