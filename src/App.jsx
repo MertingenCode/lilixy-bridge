@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowRight, ChevronDown, Wallet, Loader2, Info, Zap, ShieldCheck, ArrowLeftRight, Settings, Search, History, X, ExternalLink, RefreshCw, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { ArrowRight, ChevronDown, Wallet, Loader2, Info, Zap, ShieldCheck, ArrowLeftRight, Settings, Search, History, X, ExternalLink, RefreshCw, CheckCircle2, XCircle, Clock, Moon, Sun, UserPlus } from 'lucide-react';
 
 // --- Helper Functions & API ---
 
@@ -33,6 +33,160 @@ const getFontSize = (str) => {
   if (len > 14) return 'text-2xl';
   if (len > 10) return 'text-3xl';
   return 'text-4xl';
+};
+
+// --- Translations ---
+const TRANSLATIONS = {
+    en: {
+        connect: 'Connect Wallet',
+        pay: 'You pay',
+        receive: 'You receive',
+        bridge: 'Bridge',
+        history: 'History',
+        select: 'Select',
+        selectChain: 'Select Chain',
+        selectToken: 'Select Token',
+        searchChain: 'Search chain...',
+        searchToken: 'Name, symbol or address...',
+        noRoute: 'No Route',
+        confirm: 'Confirm Transaction',
+        networkFee: 'Network Fee',
+        provider: 'Provider',
+        clearHistory: 'Clear History',
+        noHistory: 'No transaction history yet.',
+        success: 'Transaction Successful!',
+        sendTo: 'Send to another wallet',
+        recipientAddr: 'Recipient Address',
+        found: 'FOUND',
+        balance: 'Bal:',
+        disclaimer: 'We do not hold custody of funds. Use at your own risk. Bridge fees and slippage may vary based on network conditions.',
+        rights: 'All rights reserved.'
+    },
+    tr: {
+        connect: 'Cüzdan Bağla',
+        pay: 'Ödediğiniz',
+        receive: 'Aldığınız',
+        bridge: 'Köprü',
+        history: 'Geçmiş',
+        select: 'Seç',
+        selectChain: 'Ağ Seç',
+        selectToken: 'Token Seç',
+        searchChain: 'Ağ ara...',
+        searchToken: 'İsim, sembol veya adres...',
+        noRoute: 'Rota Yok',
+        confirm: 'İşlemi Onayla',
+        networkFee: 'Ağ Ücreti',
+        provider: 'Sağlayıcı',
+        clearHistory: 'Geçmişi Temizle',
+        noHistory: 'Henüz işlem geçmişi yok.',
+        success: 'İşlem Başarılı!',
+        sendTo: 'Başka cüzdana gönder',
+        recipientAddr: 'Alıcı Adresi',
+        found: 'BULUNDU',
+        balance: 'Bak:',
+        disclaimer: 'Fonların velayetini tutmuyoruz. Risk size aittir. Köprü ücretleri ve kayma oranları ağ koşullarına göre değişebilir.',
+        rights: 'Tüm hakları saklıdır.'
+    },
+    es: {
+        connect: 'Conectar Billetera',
+        pay: 'Tú pagas',
+        receive: 'Tú recibes',
+        bridge: 'Puente',
+        history: 'Historial',
+        select: 'Seleccionar',
+        selectChain: 'Seleccionar Red',
+        selectToken: 'Seleccionar Token',
+        searchChain: 'Buscar red...',
+        searchToken: 'Nombre, símbolo o dirección...',
+        noRoute: 'Sin Ruta',
+        confirm: 'Confirmar Transacción',
+        networkFee: 'Tarifa de Red',
+        provider: 'Proveedor',
+        clearHistory: 'Borrar Historial',
+        noHistory: 'No hay historial aún.',
+        success: '¡Transacción Exitosa!',
+        sendTo: 'Enviar a otra billetera',
+        recipientAddr: 'Dirección del Destinatario',
+        found: 'ENCONTRADO',
+        balance: 'Bal:',
+        disclaimer: 'No custodiamos fondos. Úselo bajo su propio riesgo. Las tarifas pueden variar.',
+        rights: 'Todos los derechos reservados.'
+    },
+    fr: {
+        connect: 'Connecter Portefeuille',
+        pay: 'Vous payez',
+        receive: 'Vous recevez',
+        bridge: 'Pont',
+        history: 'Historique',
+        select: 'Choisir',
+        selectChain: 'Choisir Réseau',
+        selectToken: 'Choisir Jeton',
+        searchChain: 'Chercher réseau...',
+        searchToken: 'Nom, symbole ou adresse...',
+        noRoute: 'Aucune Route',
+        confirm: 'Confirmer',
+        networkFee: 'Frais Réseau',
+        provider: 'Fournisseur',
+        clearHistory: 'Effacer',
+        noHistory: 'Aucun historique.',
+        success: 'Transaction Réussie!',
+        sendTo: 'Envoyer à une autre adresse',
+        recipientAddr: 'Adresse Destinataire',
+        found: 'TROUVÉ',
+        balance: 'Solde:',
+        disclaimer: 'Nous ne détenons pas les fonds. À vos risques. Les frais peuvent varier.',
+        rights: 'Tous droits réservés.'
+    },
+    zh: {
+        connect: '连接钱包',
+        pay: '支付',
+        receive: '收到',
+        bridge: '跨链桥',
+        history: '历史记录',
+        select: '选择',
+        selectChain: '选择网络',
+        selectToken: '选择代币',
+        searchChain: '搜索网络...',
+        searchToken: '名称, 符号 或 地址...',
+        noRoute: '无路线',
+        confirm: '确认交易',
+        networkFee: '网络费用',
+        provider: '提供商',
+        clearHistory: '清除历史',
+        noHistory: '暂无交易记录',
+        success: '交易成功!',
+        sendTo: '发送到其他钱包',
+        recipientAddr: '接收地址',
+        found: '已找到',
+        balance: '余额:',
+        disclaimer: '我们要不持有资金。风险自负。费用可能因网络状况而异。',
+        rights: '版权所有.'
+    },
+    ja: {
+        connect: 'ウォレット接続',
+        pay: '支払い',
+        receive: '受け取り',
+        bridge: 'ブリッジ',
+        history: '履歴',
+        select: '選択',
+        selectChain: 'チェーン選択',
+        selectToken: 'トークン選択',
+        searchChain: 'チェーン検索...',
+        searchToken: '名前, シンボル または アドレス...',
+        noRoute: 'ルートなし',
+        confirm: '取引確認',
+        networkFee: 'ネットワーク手数料',
+        provider: 'プロバイダー',
+        clearHistory: '履歴消去',
+        noHistory: '取引履歴はありません。',
+        success: '取引成功!',
+        sendTo: '別のウォレットへ送信',
+        recipientAddr: '受取人アドレス',
+        found: '見つかりました',
+        balance: '残高:',
+        disclaimer: '資金は保管しません。自己責任で使用してください。手数料は変動する可能性があります。',
+        rights: '全著作権所有.'
+    }
 };
 
 // --- Static Card Component ---
@@ -74,18 +228,51 @@ export default function LifiBridgeApp() {
   // Transaction History State
   const [txHistory, setTxHistory] = useState([]);
 
+  // New Features States
+  const [language, setLanguage] = useState('en');
+  const [theme, setTheme] = useState('light');
+  const [isRecipientMode, setIsRecipientMode] = useState(false);
+  const [recipientAddress, setRecipientAddress] = useState('');
+  const [recipientHistory, setRecipientHistory] = useState([]);
+  
+  // Language Menu State
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+
   // Ref to prevent overwriting tokens during swap
   const isSwapping = useRef(false);
 
-  // --- Init & History Loading ---
+  // --- Init Loading (Settings & History) ---
   useEffect(() => {
       const savedHistory = localStorage.getItem('lilixy_tx_history');
-      if (savedHistory) {
-          setTxHistory(JSON.parse(savedHistory));
-      }
+      if (savedHistory) setTxHistory(JSON.parse(savedHistory));
+
+      const savedLang = localStorage.getItem('lilixy_lang');
+      if (savedLang) setLanguage(savedLang);
+
+      const savedTheme = localStorage.getItem('lilixy_theme');
+      if (savedTheme) setTheme(savedTheme);
+
+      const savedRecipients = localStorage.getItem('lilixy_recipients');
+      if (savedRecipients) setRecipientHistory(JSON.parse(savedRecipients));
   }, []);
 
-  // Save to local + State
+  // Save Settings Handlers
+  const changeLanguage = (lang) => {
+      setLanguage(lang);
+      localStorage.setItem('lilixy_lang', lang);
+      setLangMenuOpen(false);
+  };
+
+  const toggleTheme = () => {
+      const newTheme = theme === 'light' ? 'dark' : 'light';
+      setTheme(newTheme);
+      localStorage.setItem('lilixy_theme', newTheme);
+  };
+
+  // Helper for Translation
+  const t = (key) => TRANSLATIONS[language][key] || TRANSLATIONS['en'][key];
+
+  // --- History & Recipient Logic ---
   const addToHistory = (txHash, fromDetails, toDetails, amountVal) => {
       const newTx = {
           hash: txHash,
@@ -95,54 +282,45 @@ export default function LifiBridgeApp() {
           fromToken: fromDetails.token,
           toToken: toDetails.token,
           amount: amountVal,
-          status: 'PENDING' // Initial status
+          status: 'PENDING'
       };
-      
       const updatedHistory = [newTx, ...txHistory];
       setTxHistory(updatedHistory);
       localStorage.setItem('lilixy_tx_history', JSON.stringify(updatedHistory));
   };
 
+  const saveRecipient = (addr) => {
+      if (!addr || recipientHistory.includes(addr)) return;
+      const updated = [addr, ...recipientHistory].slice(0, 5); // Keep last 5
+      setRecipientHistory(updated);
+      localStorage.setItem('lilixy_recipients', JSON.stringify(updated));
+  };
+
   // --- LI.FI Status Polling ---
   const updateHistoryStatus = async () => {
       if (txHistory.length === 0) return;
-      
       setLoading(prev => ({ ...prev, history: true }));
-      
       const updatedHistory = await Promise.all(txHistory.map(async (tx) => {
-          // If already done or failed, skip check to save API calls
           if (tx.status === 'DONE' || tx.status === 'FAILED') return tx;
-
           try {
               const response = await fetch(`${LIFI_API_URL}/status?txHash=${tx.hash}&fromChain=${tx.fromChain.id}&toChain=${tx.toChain.id}`);
               const data = await response.json();
-              
-              // LI.FI Statuses: NOT_FOUND, INVALID, PENDING, DONE, FAILED
-              if (data.status) {
-                  return { ...tx, status: data.status };
-              }
+              if (data.status) return { ...tx, status: data.status };
               return tx;
-          } catch (e) {
-              console.error("Status check failed for", tx.hash, e);
-              return tx;
-          }
+          } catch (e) { return tx; }
       }));
-
       setTxHistory(updatedHistory);
       localStorage.setItem('lilixy_tx_history', JSON.stringify(updatedHistory));
       setLoading(prev => ({ ...prev, history: false }));
   };
 
-  // Auto-refresh history when tab becomes active
   useEffect(() => {
       if (activeTab === 'history') {
           updateHistoryStatus();
-          // Optional: Set up an interval to poll every 10s while tab is open
           const interval = setInterval(updateHistoryStatus, 15000);
           return () => clearInterval(interval);
       }
   }, [activeTab]);
-
 
   // --- API Requests ---
 
@@ -151,7 +329,6 @@ export default function LifiBridgeApp() {
       try {
         const res = await fetch(`${LIFI_API_URL}/chains`);
         const data = await res.json();
-        
         const supportedChains = data.chains.filter(c => c.mainnet === true);
         supportedChains.sort((a, b) => {
             const indexA = POPULAR_CHAINS.indexOf(a.id);
@@ -161,13 +338,12 @@ export default function LifiBridgeApp() {
             if (indexB !== -1) return 1;
             return 0;
         });
-
         setChains(supportedChains);
         setFromChain(supportedChains.find(c => c.id === 1) || supportedChains[0]);
         setToChain(supportedChains.find(c => c.id === 137) || supportedChains[1]);
         setLoading(prev => ({ ...prev, chains: false }));
       } catch (err) {
-        console.error("Failed to load chains:", err);
+        console.error(err);
         setError("Connection error.");
       }
     };
@@ -178,23 +354,34 @@ export default function LifiBridgeApp() {
     if (!chainId) return;
     setLoading(prev => ({ ...prev, tokens: true }));
     try {
-      const res = await fetch(`${LIFI_API_URL}/tokens?chains=${chainId}`);
+      // If wallet connected, fetch balances using &wallet= param
+      const walletParam = wallet.connected ? `&wallet=${wallet.address}` : '';
+      const res = await fetch(`${LIFI_API_URL}/tokens?chains=${chainId}${walletParam}`);
       const data = await res.json();
       const chainTokens = data.tokens[chainId] || [];
+      
+      // Sort by balance if available
+      if (wallet.connected) {
+          chainTokens.sort((a, b) => {
+              const balA = parseFloat(a.amount || 0);
+              const balB = parseFloat(b.amount || 0);
+              return balB - balA; // Descending
+          });
+      }
+
       const defaultToken = chainTokens.find(t => t.symbol === 'USDC' || t.symbol === 'ETH' || t.symbol === 'USDT') || chainTokens[0];
 
       setTokens(prev => ({ ...prev, [side]: chainTokens }));
-      if (side === 'from') setFromToken(defaultToken);
-      if (side === 'to') setToToken(defaultToken);
+      if (side === 'from' && !isSwapping.current) setFromToken(defaultToken);
+      if (side === 'to' && !isSwapping.current) setToToken(defaultToken);
       
     } catch (err) {
-      console.error("Failed to load tokens:", err);
+      console.error(err);
     } finally {
       setLoading(prev => ({ ...prev, tokens: false }));
     }
-  }, []);
+  }, [wallet.connected, wallet.address]);
 
-  // Trigger fetch only if NOT swapping
   useEffect(() => {
     if (isSwapping.current) return;
     if (fromChain) fetchTokens(fromChain.id, 'from');
@@ -205,49 +392,16 @@ export default function LifiBridgeApp() {
     if (toChain) fetchTokens(toChain.id, 'to');
   }, [toChain, fetchTokens]);
 
-  // --- Custom Token Search (useEffect) ---
-  useEffect(() => {
-    const searchTokenByAddress = async () => {
-        setImportedToken(null);
-        
-        const isAddress = /^0x[a-fA-F0-9]{40}$/.test(searchQuery);
-        
-        if (modalOpen.type === 'token' && isAddress) {
-            const currentChain = modalOpen.side === 'from' ? fromChain : toChain;
-            if (!currentChain) return;
-
-            const list = tokens[modalOpen.side] || [];
-            const exists = list.find(t => t.address.toLowerCase() === searchQuery.toLowerCase());
-            if (exists) return; 
-
-            setIsSearchingToken(true);
-            try {
-                const res = await fetch(`${LIFI_API_URL}/token?chain=${currentChain.id}&token=${searchQuery}`);
-                const data = await res.json();
-                
-                if (data && data.address) {
-                    setImportedToken(data);
-                }
-            } catch (err) {
-                console.error("Token not found:", err);
-            } finally {
-                setIsSearchingToken(false);
-            }
-        }
-    };
-
-    const timer = setTimeout(searchTokenByAddress, 500);
-    return () => clearTimeout(timer);
-  }, [searchQuery, modalOpen, fromChain, toChain, tokens]);
-
-
-  // Get Quote
+  // Quote
   useEffect(() => {
     const getQuote = async () => {
       if (!amount || parseFloat(amount) <= 0 || !fromChain || !toChain || !fromToken || !toToken) {
         setQuote(null);
         return;
       }
+      
+      // Valid recipient check
+      const targetAddress = isRecipientMode && recipientAddress ? recipientAddress : (wallet.address || '0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0');
 
       setLoading(prev => ({ ...prev, quote: true }));
       setError(null);
@@ -256,15 +410,14 @@ export default function LifiBridgeApp() {
       try {
         const amountRaw = (parseFloat(amount) * Math.pow(10, fromToken.decimals)).toLocaleString('fullwide', { useGrouping: false }).split('.')[0];
         
-        const DUMMY_ADDRESS = '0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0'; 
-
         const params = new URLSearchParams({
             fromChain: fromChain.id,
             toChain: toChain.id,
             fromToken: fromToken.address,
             toToken: toToken.address,
             fromAmount: amountRaw,
-            fromAddress: wallet.address || DUMMY_ADDRESS, 
+            fromAddress: wallet.address || targetAddress, 
+            toAddress: targetAddress, // Add toAddress parameter
             integrator: 'lilixy',
             fee: '0.0025',
         });
@@ -275,8 +428,8 @@ export default function LifiBridgeApp() {
         if (data.message) throw new Error(data.message);
         setQuote(data);
       } catch (err) {
-        console.error("Quote error:", err);
-        setError("No route found or insufficient liquidity.");
+        console.error(err);
+        setError(t('noRoute'));
       } finally {
         setLoading(prev => ({ ...prev, quote: false }));
       }
@@ -284,10 +437,10 @@ export default function LifiBridgeApp() {
 
     const timer = setTimeout(() => getQuote(), 600);
     return () => clearTimeout(timer);
-  }, [amount, fromChain, toChain, fromToken, toToken, wallet.address]);
+  }, [amount, fromChain, toChain, fromToken, toToken, wallet.address, isRecipientMode, recipientAddress]);
 
 
-  // --- Wallet ---
+  // Wallet
   const connectWallet = async () => {
     if (window.ethereum) {
       try {
@@ -324,17 +477,15 @@ export default function LifiBridgeApp() {
         };
         const txHash = await window.ethereum.request({ method: 'eth_sendTransaction', params: [txParams] });
         
-        // Add to history
-        addToHistory(
-            txHash,
-            { chain: fromChain, token: fromToken },
-            { chain: toChain, token: toToken },
-            amount
-        );
-        // Switch to history tab on success
-        setActiveTab('history');
+        addToHistory(txHash, { chain: fromChain, token: fromToken }, { chain: toChain, token: toToken }, amount);
+        
+        // Save recipient if custom
+        if (isRecipientMode && recipientAddress) {
+            saveRecipient(recipientAddress);
+        }
 
-        alert(`Transaction Successful! Hash: ${txHash}`);
+        setActiveTab('history');
+        alert(t('success') + ` Hash: ${txHash}`);
     } catch (err) {
         alert(`Error: ${err.message}`);
     } finally {
@@ -342,7 +493,6 @@ export default function LifiBridgeApp() {
     }
   };
 
-  // --- REVERSE (SWAP) LOGIC ---
   const handleReverse = () => {
     if (isSwapping.current) return;
     isSwapping.current = true;
@@ -373,21 +523,35 @@ export default function LifiBridgeApp() {
     setTimeout(() => { isSwapping.current = false; }, 800);
   };
 
-  // --- Render Functions ---
-
-  // Helper for Status Badge
+  // --- Render Helpers ---
   const getStatusBadge = (status) => {
       switch (status) {
-          case 'DONE':
-              return <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full"><CheckCircle2 size={12} /> SUCCESS</span>;
-          case 'FAILED':
-              return <span className="flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full"><XCircle size={12} /> FAILED</span>;
-          default: // PENDING, NOT_FOUND
-              return <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-full"><Clock size={12} className="animate-spin" /> PENDING</span>;
+          case 'DONE': return <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full"><CheckCircle2 size={12} /> DONE</span>;
+          case 'FAILED': return <span className="flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-100 px-2 py-1 rounded-full"><XCircle size={12} /> FAILED</span>;
+          default: return <span className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-full"><Clock size={12} className="animate-spin" /> PENDING</span>;
       }
   };
 
-  // Modal
+  // Format Balance Helper
+  const formatBalance = (amount, decimals) => {
+      if (!amount) return '0.0';
+      const val = parseFloat(amount) / Math.pow(10, decimals);
+      if (val < 0.00001) return '<0.00001';
+      return val.toLocaleString('en-US', { maximumFractionDigits: 5 });
+  };
+
+  // Colors based on Theme
+  const isDark = theme === 'dark';
+  const bgApp = isDark ? 'bg-slate-950' : 'bg-white';
+  const textMain = isDark ? 'text-white' : 'text-gray-800';
+  const textSub = isDark ? 'text-gray-400' : 'text-gray-500';
+  const cardBg = isDark ? 'bg-slate-900/70 border-slate-800 ring-white/10' : 'bg-white/70 border-white/50 ring-white/60';
+  const innerCardBg = isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50/50 border-transparent';
+  const inputColor = isDark ? 'text-white placeholder-gray-600' : 'text-gray-800 placeholder-gray-200';
+  const modalBg = isDark ? 'bg-slate-900/95 border-slate-800' : 'bg-white/95 border-blue-100';
+  const modalItemHover = isDark ? 'hover:bg-slate-800' : 'hover:bg-blue-50';
+
+  // --- Modal ---
   const renderModal = () => {
     if (!['chain', 'token'].includes(modalOpen.type)) return null;
     const isChain = modalOpen.type === 'chain';
@@ -405,21 +569,21 @@ export default function LifiBridgeApp() {
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-white/95 backdrop-blur-xl rounded-3xl w-full max-w-md max-h-[70vh] flex flex-col shadow-2xl overflow-hidden border border-blue-100 ring-4 ring-blue-500/10">
-                <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-white">
-                    <h3 className="font-bold text-gray-800 text-lg tracking-tight">
-                        {isChain ? 'Select Chain' : 'Select Token'}
+            <div className={`${modalBg} backdrop-blur-xl rounded-3xl w-full max-w-md max-h-[70vh] flex flex-col shadow-2xl overflow-hidden border ring-4 ring-blue-500/10`}>
+                <div className={`p-5 border-b ${isDark ? 'border-slate-800 bg-slate-900' : 'border-gray-100 bg-white'} flex justify-between items-center`}>
+                    <h3 className={`font-bold text-lg tracking-tight ${textMain}`}>
+                        {isChain ? t('selectChain') : t('selectToken')}
                     </h3>
-                    <button onClick={() => { setModalOpen({ type: null }); setImportedToken(null); }} className="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition-colors">
+                    <button onClick={() => { setModalOpen({ type: null }); setImportedToken(null); }} className={`p-2 rounded-full transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>
                         <X size={18} />
                     </button>
                 </div>
-                <div className="p-4 bg-white relative">
+                <div className={`p-4 relative ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
                     <div className="relative">
                          <input 
                             type="text" 
-                            placeholder={isChain ? "Search chain..." : "Name, symbol or address (0x...)"}
-                            className="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-10 pr-5 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                            placeholder={isChain ? t('searchChain') : t('searchToken')}
+                            className={`w-full border rounded-2xl pl-10 pr-5 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200'}`}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             autoFocus
@@ -429,7 +593,7 @@ export default function LifiBridgeApp() {
                         </div>
                     </div>
                 </div>
-                <div className="overflow-y-auto flex-1 p-2 space-y-1 bg-white">
+                <div className={`overflow-y-auto flex-1 p-2 space-y-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
                     {filteredList.map((item) => (
                         <button
                             key={item.id || item.address}
@@ -440,37 +604,49 @@ export default function LifiBridgeApp() {
                                 } else {
                                     if (modalOpen.side === 'from') setFromToken(item);
                                     else setToToken(item);
+                                    if (modalOpen.side === 'from' && item.amount) {
+                                        const bal = parseFloat(item.amount) / Math.pow(10, item.decimals);
+                                        setAmount(bal.toString());
+                                    }
                                 }
                                 setModalOpen({ type: null });
                                 setSearchQuery('');
                                 setImportedToken(null);
                             }}
-                            className={`w-full flex items-center gap-4 p-3 hover:bg-blue-50 rounded-2xl transition-all group text-left border border-transparent hover:border-blue-100 
-                            ${importedToken && item.address === importedToken.address ? 'bg-blue-50/50 border-blue-100' : ''}`}
+                            className={`w-full flex items-center gap-4 p-3 rounded-2xl transition-all group text-left border border-transparent ${modalItemHover} ${importedToken && item.address === importedToken.address ? 'bg-blue-50/50 border-blue-100' : ''}`}
                         >
                             <img 
                                 src={item.logoURI || 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/default_token.png'} 
                                 onError={(e) => { e.target.src = 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/default_token.png' }}
                                 alt={item.name} 
-                                className="w-10 h-10 rounded-full bg-white shadow-sm object-cover p-0.5" 
+                                className={`w-10 h-10 rounded-full shadow-sm object-cover p-0.5 ${isDark ? 'bg-transparent' : 'bg-white'}`}
                             />
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                    <div className="font-bold text-gray-800 group-hover:text-blue-600 transition-colors truncate">{item.name}</div>
-                                    {importedToken && item.address === importedToken.address && (
-                                        <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-bold">FOUND</span>
-                                    )}
-                                </div>
-                                { !isChain && (
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <span className="text-xs text-gray-500 font-medium">{item.symbol}</span>
-                                        {item.address && (
-                                            <span className="text-[10px] text-gray-400 font-mono bg-gray-100 px-1.5 py-0.5 rounded-md truncate max-w-[120px]">
-                                                {formatAddress(item.address)}
-                                            </span>
+                            <div className="min-w-0 flex-1 flex justify-between items-center">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <div className={`font-bold transition-colors truncate ${textMain} group-hover:text-blue-500`}>{item.name}</div>
+                                        {importedToken && item.address === importedToken.address && (
+                                            <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-bold">{t('found')}</span>
                                         )}
                                     </div>
-                                ) }
+                                    { !isChain && (
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span className={`text-xs font-medium ${textSub}`}>{item.symbol}</span>
+                                            {item.address && (
+                                                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md truncate max-w-[100px] ${isDark ? 'bg-slate-800 text-gray-500' : 'bg-gray-100 text-gray-400'}`}>
+                                                    {formatAddress(item.address)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    ) }
+                                </div>
+                                {/* BALANCE DISPLAY */}
+                                {!isChain && item.amount && parseFloat(item.amount) > 0 && (
+                                    <div className="text-right">
+                                        <div className={`text-xs font-bold ${textMain}`}>{formatBalance(item.amount, item.decimals)}</div>
+                                        <div className="text-[10px] text-gray-400">{t('balance')}</div>
+                                    </div>
+                                )}
                             </div>
                         </button>
                     ))}
@@ -486,68 +662,101 @@ export default function LifiBridgeApp() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 font-sans relative overflow-hidden selection:bg-blue-200 selection:text-blue-900 flex flex-col">
+    <div className={`min-h-screen ${bgApp} ${textMain} font-sans relative overflow-hidden selection:bg-blue-200 selection:text-blue-900 flex flex-col transition-colors duration-500`}>
       
       {/* --- Dynamic Background Effects --- */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-blue-400/20 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '4s' }} />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-cyan-400/20 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '6s' }} />
-        <div className="absolute top-[20%] right-[20%] w-[400px] h-[400px] bg-indigo-300/20 rounded-full blur-[80px]" />
+        <div className={`absolute top-[-20%] left-[-10%] w-[800px] h-[800px] rounded-full blur-[120px] animate-pulse ${isDark ? 'bg-blue-900/20' : 'bg-blue-400/20'}`} style={{ animationDuration: '4s' }} />
+        <div className={`absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] rounded-full blur-[120px] animate-pulse ${isDark ? 'bg-indigo-900/20' : 'bg-cyan-400/20'}`} style={{ animationDuration: '6s' }} />
+        <div className={`absolute top-[20%] right-[20%] w-[400px] h-[400px] rounded-full blur-[80px] ${isDark ? 'bg-purple-900/10' : 'bg-indigo-300/20'}`} />
       </div>
 
       {/* --- Header --- */}
       <header className="relative z-10 w-full px-6 py-6 flex justify-between items-center max-w-6xl mx-auto">
         <div className="text-3xl font-black tracking-tight pr-4 pb-1 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 leading-normal">
-            Lilixy
+            Lilixy Bridge
         </div>
 
-        <button 
-            onClick={connectWallet}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-blue-200/50
-            ${wallet.connected 
-                ? 'bg-white text-blue-600 border border-blue-100' 
-                : 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:shadow-blue-400/50'
-            }`}
-        >
-            <Wallet size={18} className={wallet.connected ? "text-blue-500" : "text-white"} />
-            {wallet.connected ? formatAddress(wallet.address) : 'Connect Wallet'}
-        </button>
+        <div className="flex items-center gap-3">
+            {/* Theme Toggle */}
+            <button
+                onClick={toggleTheme}
+                className={`p-3 rounded-full transition-all duration-500 transform hover:rotate-[360deg] active:scale-90 ${isDark ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-white text-orange-500 hover:bg-orange-50 shadow-sm border border-gray-100'}`}
+                title={t('theme')}
+            >
+                {isDark ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
+
+            {/* Language Selector */}
+            <div className={`flex items-center rounded-full transition-all duration-500 ease-in-out overflow-hidden ${langMenuOpen ? 'w-64' : 'w-12'} ${isDark ? 'bg-slate-800' : 'bg-white shadow-sm border border-gray-100'}`}>
+                <button
+                    onClick={() => setLangMenuOpen(!langMenuOpen)}
+                    className={`w-12 h-10 flex-shrink-0 flex items-center justify-center font-bold text-xs ${isDark ? 'text-white' : 'text-gray-700'}`}
+                >
+                    {language.toUpperCase()}
+                </button>
+                
+                {/* Expanded Options */}
+                <div className="flex items-center gap-1 pr-3 overflow-hidden">
+                     {['en', 'tr', 'es', 'fr', 'zh', 'ja'].filter(l => l !== language).map(lang => (
+                         <button
+                            key={lang}
+                            onClick={() => changeLanguage(lang)}
+                            className={`px-2 py-1 text-xs font-medium rounded hover:scale-110 transition-transform whitespace-nowrap ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-blue-600'}`}
+                         >
+                            {lang.toUpperCase()}
+                         </button>
+                     ))}
+                </div>
+            </div>
+
+            <button 
+                onClick={connectWallet}
+                className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg 
+                ${wallet.connected 
+                    ? (isDark ? 'bg-slate-800 text-blue-400 border border-slate-700' : 'bg-white text-blue-600 border border-blue-100') 
+                    : 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:shadow-blue-400/50'
+                }`}
+            >
+                <Wallet size={18} className={wallet.connected ? "text-blue-500" : "text-white"} />
+                {wallet.connected ? formatAddress(wallet.address) : t('connect')}
+            </button>
+        </div>
       </header>
 
       {/* --- Main Stage --- */}
       <main className="relative z-10 flex flex-col items-center justify-center flex-grow px-4 pb-8">
         
         <StaticCard className="w-full max-w-[500px]">
-            {/* Card Height: removed fixed h-[640px], added min-h-[500px] and transition for smooth resize */}
-            <div className="bg-white/70 backdrop-blur-2xl rounded-[3rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/50 p-2 relative overflow-hidden ring-1 ring-white/60 min-h-[500px] h-auto transition-[height] duration-500 ease-in-out flex flex-col">
+            <div className={`${cardBg} backdrop-blur-2xl rounded-[3rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] p-2 relative overflow-hidden ring-1 min-h-[500px] h-auto transition-[height] duration-500 ease-in-out flex flex-col`}>
                 
                 {/* Inner Glow Effect */}
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/40 via-transparent to-transparent pointer-events-none rounded-[3rem]" />
+                <div className={`absolute top-0 left-0 w-full h-full bg-gradient-to-br via-transparent to-transparent pointer-events-none rounded-[3rem] ${isDark ? 'from-white/5' : 'from-white/40'}`} />
 
                 <div className="p-6 md:p-8 relative z-10 flex flex-col h-full">
 
                     {/* --- Tab Switcher --- */}
                     <div className="flex justify-center mb-4 shrink-0">
-                        <div className="bg-gray-100/80 p-1.5 rounded-full flex gap-1">
+                        <div className={`p-1.5 rounded-full flex gap-1 ${isDark ? 'bg-slate-800' : 'bg-gray-100/80'}`}>
                             <button
                                 onClick={() => setActiveTab('bridge')}
                                 className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
                                     activeTab === 'bridge' 
-                                    ? 'bg-white text-blue-600 shadow-md' 
-                                    : 'text-gray-500 hover:text-gray-700'
+                                    ? (isDark ? 'bg-slate-700 text-white shadow-md' : 'bg-white text-blue-600 shadow-md') 
+                                    : (isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
                                 }`}
                             >
-                                Bridge
+                                {t('bridge')}
                             </button>
                             <button
                                 onClick={() => setActiveTab('history')}
                                 className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
                                     activeTab === 'history' 
-                                    ? 'bg-white text-blue-600 shadow-md' 
-                                    : 'text-gray-500 hover:text-gray-700'
+                                    ? (isDark ? 'bg-slate-700 text-white shadow-md' : 'bg-white text-blue-600 shadow-md') 
+                                    : (isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700')
                                 }`}
                             >
-                                History
+                                {t('history')}
                             </button>
                         </div>
                     </div>
@@ -556,31 +765,29 @@ export default function LifiBridgeApp() {
                     {activeTab === 'bridge' && (
                         <div className="flex flex-col flex-1 animate-in fade-in slide-in-from-bottom-2 duration-300 h-full">
                              {/* FROM CARD */}
-                            <div className="bg-gradient-to-br from-blue-50/80 to-white/90 p-5 rounded-[2rem] border border-blue-100/50 hover:border-blue-300/50 transition-all shadow-sm group">
+                            <div className={`${innerCardBg} p-5 rounded-[2rem] border hover:border-blue-300/30 transition-all shadow-sm group`}>
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs font-bold text-blue-400 tracking-wider uppercase pl-1">You pay</span>
-                                    <div className="flex items-center gap-2 bg-white/80 rounded-full p-1 pl-3 pr-2 shadow-sm border border-blue-50/50 cursor-pointer hover:bg-white transition-colors"
+                                    <span className="text-xs font-bold text-blue-400 tracking-wider uppercase pl-1">{t('pay')}</span>
+                                    <div className={`flex items-center gap-2 rounded-full p-1 pl-3 pr-2 shadow-sm border cursor-pointer transition-colors ${isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-gray-100/50 hover:bg-white'}`}
                                         onClick={() => { setModalOpen({ type: 'chain', side: 'from' }); setSearchQuery(''); }}>
                                         {fromChain ? (
                                             <div className="flex items-center gap-2">
                                                 <img src={fromChain.logoURI} className="w-5 h-5 rounded-full" alt="" />
-                                                <span className="font-bold text-sm text-gray-700">{fromChain.name}</span>
+                                                <span className={`font-bold text-sm ${textMain}`}>{fromChain.name}</span>
                                             </div>
                                         ) : <Loader2 className="animate-spin w-4 h-4 text-blue-500" />}
-                                        <ChevronDown size={14} className="text-gray-400" />
+                                        <ChevronDown size={14} className={textSub} />
                                     </div>
                                 </div>
 
-                                {/* Flexible container for Input and Button */}
                                 <div className="flex items-center justify-between gap-4 min-w-0">
-                                    {/* Input Container: min-w-0 ensures it shrinks properly */}
                                     <div className="min-w-0 flex-1">
                                         <input 
                                             type="number" 
                                             placeholder="0"
                                             value={amount}
                                             onChange={(e) => setAmount(e.target.value)}
-                                            className={`w-full bg-transparent font-black text-gray-800 placeholder-gray-200 outline-none tracking-tight ${getFontSize(amount)}`}
+                                            className={`w-full bg-transparent font-black outline-none tracking-tight ${getFontSize(amount)} ${inputColor}`}
                                         />
                                     </div>
                                     
@@ -592,14 +799,13 @@ export default function LifiBridgeApp() {
                                             <Loader2 className="animate-spin w-5 h-5" />
                                         ) : fromToken ? (
                                             <>
-                                                <img src={fromToken.logoURI} className="w-6 h-6 rounded-full bg-white/20" alt="" />
+                                                <img src={fromToken.logoURI} className="w-6 h-6 rounded-full" alt="" />
                                                 <span className="font-bold">{fromToken.symbol}</span>
                                                 <ChevronDown size={14} className="text-blue-200" />
                                             </>
-                                        ) : <span>Select</span>}
+                                        ) : <span>{t('select')}</span>}
                                     </button>
                                 </div>
-                                {/* FOOTER: USD LEFT, ADDRESS RIGHT */}
                                 <div className="h-4 flex items-center justify-between px-1 mt-1">
                                     <div className="text-xs font-medium text-gray-400">
                                         {amount && fromToken && fromToken.priceUSD && (
@@ -610,10 +816,10 @@ export default function LifiBridgeApp() {
                                 </div>
                             </div>
 
-                            {/* SWITCH BUTTON (FUNCTIONAL) */}
+                            {/* SWITCH BUTTON */}
                             <div className="relative h-2 flex items-center justify-center z-20">
                                 <button 
-                                    className="group bg-white p-2.5 rounded-2xl shadow-xl border-4 border-white/40 text-blue-500 hover:text-blue-600 hover:scale-110 transition-all active:rotate-180 duration-500"
+                                    className={`group p-2.5 rounded-2xl shadow-xl border-4 text-blue-500 hover:text-blue-600 hover:scale-110 transition-all active:rotate-180 duration-500 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-white/40'}`}
                                     onClick={handleReverse}
                                 >
                                     <ArrowLeftRight size={18} strokeWidth={3} />
@@ -621,26 +827,25 @@ export default function LifiBridgeApp() {
                             </div>
 
                             {/* TO CARD */}
-                            <div className="bg-gradient-to-br from-gray-50/80 to-white/90 p-5 rounded-[2rem] border border-gray-100/50 hover:border-blue-200/50 transition-all shadow-sm group mt-2">
+                            <div className={`${innerCardBg} p-5 rounded-[2rem] border hover:border-blue-200/30 transition-all shadow-sm group mt-2`}>
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs font-bold text-gray-400 tracking-wider uppercase pl-1">You receive</span>
-                                    <div className="flex items-center gap-2 bg-white/80 rounded-full p-1 pl-3 pr-2 shadow-sm border border-gray-100/50 cursor-pointer hover:bg-white transition-colors"
+                                    <span className={`text-xs font-bold tracking-wider uppercase pl-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t('receive')}</span>
+                                    <div className={`flex items-center gap-2 rounded-full p-1 pl-3 pr-2 shadow-sm border cursor-pointer transition-colors ${isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-gray-100/50 hover:bg-white'}`}
                                         onClick={() => { setModalOpen({ type: 'chain', side: 'to' }); setSearchQuery(''); }}>
                                         {toChain ? (
                                             <div className="flex items-center gap-2">
                                                 <img src={toChain.logoURI} className="w-5 h-5 rounded-full" alt="" />
-                                                <span className="font-bold text-sm text-gray-700">{toChain.name}</span>
+                                                <span className={`font-bold text-sm ${textMain}`}>{toChain.name}</span>
                                             </div>
                                         ) : <Loader2 className="animate-spin w-4 h-4 text-gray-500" />}
-                                        <ChevronDown size={14} className="text-gray-400" />
+                                        <ChevronDown size={14} className={textSub} />
                                     </div>
                                 </div>
 
                                 <div className="flex items-center justify-between gap-4 min-w-0">
-                                    {/* Quote Display Container */}
-                                    <div className={`w-full font-black tracking-tight min-w-0 truncate ${quote ? 'text-gray-800' : 'text-gray-200'} ${getFontSize(quote ? formatAmount(quote.estimate.toAmount / Math.pow(10, toToken.decimals)) : "0.00")}`}>
+                                    <div className={`w-full font-black tracking-tight min-w-0 truncate ${quote ? (isDark ? 'text-white' : 'text-gray-800') : 'text-gray-200'} ${getFontSize(quote ? formatAmount(quote.estimate.toAmount / Math.pow(10, toToken.decimals)) : "0.00")}`}>
                                         {loading.quote ? (
-                                            <div className="h-10 w-32 bg-gray-100 rounded-lg animate-pulse" />
+                                            <div className="h-10 w-32 bg-gray-200/20 rounded-lg animate-pulse" />
                                         ) : quote ? (
                                             formatAmount(quote.estimate.toAmount / Math.pow(10, toToken.decimals))
                                         ) : "0.00"}
@@ -655,31 +860,74 @@ export default function LifiBridgeApp() {
                                                 <span className="font-bold">{toToken.symbol}</span>
                                                 <ChevronDown size={14} className="text-blue-200" />
                                             </>
-                                        ) : <span>Select</span>}
+                                        ) : <span>{t('select')}</span>}
                                     </button>
                                 </div>
-                                {/* FOOTER: USD LEFT, ADDRESS RIGHT */}
                                 <div className="h-4 flex items-center justify-between px-1 mt-1">
                                     <div className="text-xs font-medium text-gray-400">
                                         {quote && toToken && toToken.priceUSD && (
                                             <span>≈ {formatUSD(quote.estimate.toAmount / Math.pow(10, toToken.decimals), toToken.priceUSD)}</span>
                                         )}
                                     </div>
-                                    {toToken && <span className="text-[10px] text-gray-300 font-mono">{formatAddress(toToken.address)}</span>}
+                                    {toToken && <span className="text-[10px] text-gray-400 font-mono">{formatAddress(toToken.address)}</span>}
                                 </div>
+                            </div>
+
+                            {/* RECIPIENT TOGGLE */}
+                            <div className="mt-3 px-1">
+                                <button 
+                                    onClick={() => setIsRecipientMode(!isRecipientMode)} 
+                                    className={`text-xs flex items-center gap-1.5 font-medium transition-colors ${isRecipientMode ? 'text-blue-500' : 'text-gray-400 hover:text-blue-500'}`}
+                                >
+                                    <UserPlus size={14} /> {t('sendTo')}
+                                </button>
+                                
+                                {isRecipientMode && (
+                                    <div className={`mt-2 p-3 rounded-xl border animate-in slide-in-from-top-2 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-blue-100'}`}>
+                                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">{t('recipientAddr')}</div>
+                                        <div className="flex gap-2">
+                                            <input 
+                                                type="text" 
+                                                placeholder="0x..." 
+                                                value={recipientAddress}
+                                                onChange={(e) => setRecipientAddress(e.target.value)}
+                                                className={`w-full text-sm bg-transparent outline-none ${isDark ? 'text-white placeholder-gray-600' : 'text-gray-800 placeholder-gray-300'}`}
+                                            />
+                                            {/* Recent Recipients */}
+                                            {recipientHistory.length > 0 && (
+                                                <div className="relative group">
+                                                    <button className={`p-1.5 rounded-lg ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-gray-100 hover:bg-gray-200'}`}>
+                                                        <History size={14} className="text-gray-500" />
+                                                    </button>
+                                                    <div className={`absolute right-0 bottom-full mb-2 w-48 rounded-xl shadow-xl border p-1 hidden group-hover:block z-50 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-100'}`}>
+                                                        {recipientHistory.map((addr, idx) => (
+                                                            <button 
+                                                                key={idx}
+                                                                onClick={() => setRecipientAddress(addr)}
+                                                                className={`w-full text-left text-xs p-2 rounded-lg truncate ${isDark ? 'text-gray-300 hover:bg-slate-800' : 'text-gray-600 hover:bg-gray-50'}`}
+                                                            >
+                                                                {addr}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* DETAILS & STATUS */}
                             <div className="flex-col justify-end py-2 mt-2">
                                 {quote && !error && (
-                                    <div className="bg-blue-50/50 rounded-2xl p-3 border border-blue-100 backdrop-blur-sm animate-in slide-in-from-top-4 fade-in duration-500 space-y-1 mb-3">
+                                    <div className={`${isDark ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50/50 border-blue-100'} rounded-2xl p-3 border backdrop-blur-sm animate-in slide-in-from-top-4 fade-in duration-500 space-y-1 mb-3`}>
                                         <div className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-500 font-medium flex items-center gap-2"><Zap size={14} className="text-amber-500"/> Network Fee</span>
-                                            <span className="font-bold text-gray-700">${parseFloat(quote.estimate.gasCosts?.[0]?.amountUSD || 0).toFixed(2)}</span>
+                                            <span className={`font-medium flex items-center gap-2 ${textSub}`}><Zap size={14} className="text-amber-500"/> {t('networkFee')}</span>
+                                            <span className={`font-bold ${textMain}`}>${parseFloat(quote.estimate.gasCosts?.[0]?.amountUSD || 0).toFixed(2)}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-500 font-medium flex items-center gap-2"><ShieldCheck size={14} className="text-green-500"/> Provider</span>
-                                            <span className="font-bold text-blue-600 flex items-center gap-1.5 bg-blue-100 px-2 py-0.5 rounded-md text-xs uppercase tracking-wide">
+                                            <span className={`font-medium flex items-center gap-2 ${textSub}`}><ShieldCheck size={14} className="text-green-500"/> {t('provider')}</span>
+                                            <span className="font-bold text-blue-500 flex items-center gap-1.5 bg-blue-500/10 px-2 py-0.5 rounded-md text-xs uppercase tracking-wide">
                                                 <img src={quote.toolDetails.logoURI} className="w-3 h-3" alt="" />
                                                 {quote.toolDetails.name}
                                             </span>
@@ -688,12 +936,12 @@ export default function LifiBridgeApp() {
                                 )}
                                 
                                 {error && (
-                                    <div className="bg-red-50 text-red-500 p-3 rounded-2xl text-sm font-medium border border-red-100 flex items-center gap-2 animate-in fade-in mb-3">
+                                    <div className="bg-red-500/10 text-red-500 p-3 rounded-2xl text-sm font-medium border border-red-500/20 flex items-center gap-2 animate-in fade-in mb-3">
                                         <Info size={18} /> {error}
                                     </div>
                                 )}
 
-                                {/* MAIN BUTTON (Moved closer to content via flex layout and margins) */}
+                                {/* MAIN BUTTON */}
                                 <button
                                     onClick={handleSwap}
                                     disabled={loading.quote || loading.swap || (amount && !quote && !error)}
@@ -710,8 +958,8 @@ export default function LifiBridgeApp() {
                                     <div className="relative z-10 flex items-center justify-center gap-2">
                                         {loading.swap ? <Loader2 className="animate-spin" /> : 
                                         loading.quote ? <Loader2 className="animate-spin" /> : 
-                                        !wallet.connected ? 'Connect Wallet' : 
-                                        error ? 'No Route' : 'Confirm Transaction'}
+                                        !wallet.connected ? t('connect') : 
+                                        error ? t('noRoute') : t('confirm')}
                                         {!loading.swap && !loading.quote && !error && wallet.connected && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
                                     </div>
                                     
@@ -739,23 +987,23 @@ export default function LifiBridgeApp() {
                              <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar space-y-3">
                                 {txHistory.length === 0 ? (
                                     <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4 py-10">
-                                        <div className="p-4 bg-gray-50 rounded-full">
+                                        <div className={`p-4 rounded-full ${isDark ? 'bg-slate-800' : 'bg-gray-50'}`}>
                                             <History size={32} className="opacity-50" />
                                         </div>
-                                        <p>No transaction history yet.</p>
+                                        <p>{t('noHistory')}</p>
                                     </div>
                                 ) : (
                                     txHistory.map((tx, idx) => (
-                                        <div key={idx} className="bg-white/80 p-4 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+                                        <div key={idx} className={`${innerCardBg} p-4 rounded-2xl border shadow-sm hover:shadow-md transition-all group`}>
                                             <div className="flex justify-between items-center mb-3">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-full uppercase tracking-wider">
+                                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${isDark ? 'bg-slate-800 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
                                                         {new Date(tx.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                     </span>
                                                     {/* STATUS BADGE */}
                                                     {getStatusBadge(tx.status)}
                                                 </div>
-                                                <a href={`https://scan.li.fi/tx/${tx.hash}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-full transition-colors">
+                                                <a href={`https://scan.li.fi/tx/${tx.hash}`} target="_blank" rel="noreferrer" className={`p-1.5 rounded-full transition-colors ${isDark ? 'text-blue-400 bg-slate-800 hover:bg-slate-700' : 'text-blue-500 bg-blue-50 hover:bg-blue-100'}`}>
                                                     <ExternalLink size={14} />
                                                 </a>
                                             </div>
@@ -768,17 +1016,17 @@ export default function LifiBridgeApp() {
                                                         <img src={tx.fromToken.logoURI} className="w-4 h-4 rounded-full absolute -bottom-1 -right-1 border border-white" alt="" />
                                                     </div>
                                                     <div>
-                                                        <div className="font-bold text-gray-800 text-sm">{tx.amount} {tx.fromToken.symbol}</div>
+                                                        <div className={`font-bold text-sm ${textMain}`}>{tx.amount} {tx.fromToken.symbol}</div>
                                                         <div className="text-[10px] text-gray-500">{tx.fromChain.name}</div>
                                                     </div>
                                                 </div>
 
-                                                <ArrowRight size={16} className="text-gray-300" />
+                                                <ArrowRight size={16} className="text-gray-400" />
 
                                                 {/* To */}
                                                 <div className="flex items-center gap-3 justify-end">
                                                      <div className="text-right">
-                                                        <div className="font-bold text-gray-800 text-sm">{tx.toToken.symbol}</div>
+                                                        <div className={`font-bold text-sm ${textMain}`}>{tx.toToken.symbol}</div>
                                                         <div className="text-[10px] text-gray-500">{tx.toChain.name}</div>
                                                     </div>
                                                     <div className="relative">
@@ -801,9 +1049,9 @@ export default function LifiBridgeApp() {
                                             localStorage.removeItem('lilixy_tx_history');
                                         }
                                     }}
-                                    className="mt-4 w-full py-3 text-sm text-red-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors font-medium flex items-center justify-center gap-2 shrink-0"
+                                    className="mt-4 w-full py-3 text-sm text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-colors font-medium flex items-center justify-center gap-2 shrink-0"
                                 >
-                                    <RefreshCw size={14} /> Clear History
+                                    <RefreshCw size={14} /> {t('clearHistory')}
                                 </button>
                              )}
                          </div>
@@ -817,10 +1065,9 @@ export default function LifiBridgeApp() {
 
       {/* --- Footer --- */}
       <footer className="relative z-10 w-full py-6 text-center text-gray-400 text-xs space-y-2 pb-8">
-         <p>© 2024 Lilixy Bridge. All rights reserved.</p>
+         <p>© 2025 Lilixy Bridge. {t('rights')}</p>
          <p className="max-w-md mx-auto px-4 opacity-70">
-            Disclaimer: Lilixy acts as a frontend interface for the LI.FI protocol. We do not hold custody of funds.
-            Use at your own risk. Bridge fees and slippage may vary based on network conditions.
+            Disclaimer: {t('disclaimer')}
          </p>
       </footer>
 
