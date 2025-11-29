@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowRight, ChevronDown, Wallet, Loader2, Info, Zap, ShieldCheck, ArrowLeftRight, Settings, Search, History, X, ExternalLink, RefreshCw, CheckCircle2, XCircle, Clock, Moon, Sun, UserPlus, AlertTriangle, RefreshCcw } from 'lucide-react';
+import { ArrowRight, ChevronDown, Wallet, Loader2, Info, Zap, ShieldCheck, ArrowLeftRight, Settings, Search, History, X, ExternalLink, RefreshCw, CheckCircle2, XCircle, Clock, Moon, Sun, UserPlus, AlertTriangle } from 'lucide-react';
 
 // --- Helper Functions & API ---
 
@@ -221,7 +221,7 @@ export default function LifiBridgeApp() {
   const [chains, setChains] = useState([]);
   const [tokens, setTokens] = useState({ from: [], to: [] });
   const [tokenBalances, setTokenBalances] = useState({});
-  const [loading, setLoading] = useState({ chains: true, tokens: false, quote: false, swap: false, history: false, balance: false });
+  const [loading, setLoading] = useState({ chains: true, tokens: false, quote: false, swap: false, history: false });
   
   const [wallet, setWallet] = useState({ address: null, chainId: null, connected: false });
   
@@ -268,7 +268,6 @@ export default function LifiBridgeApp() {
       const checkConnection = async () => {
           if (window.ethereum) {
               try {
-                  // Check if we have permission already
                   const accounts = await window.ethereum.request({ method: 'eth_accounts' });
                   if (accounts.length > 0) {
                       const chainId = await window.ethereum.request({ method: 'eth_chainId' });
@@ -286,7 +285,7 @@ export default function LifiBridgeApp() {
       checkConnection();
   }, []);
 
-  // --- Init Loading (Settings & History) ---
+  // --- Init Loading ---
   useEffect(() => {
       const savedHistory = localStorage.getItem('lilixy_tx_history');
       if (savedHistory) setTxHistory(JSON.parse(savedHistory));
@@ -375,6 +374,7 @@ export default function LifiBridgeApp() {
 
   // --- API Requests ---
 
+  // 1. Fetch Chains
   useEffect(() => {
     const fetchChains = async () => {
       try {
@@ -401,15 +401,38 @@ export default function LifiBridgeApp() {
     fetchChains();
   }, []);
 
+  // 2. Fetch Tokens (With Wallet Balance if connected)
   const fetchTokens = useCallback(async (chainId, side) => {
     if (!chainId) return;
     setLoading(prev => ({ ...prev, tokens: true }));
     try {
-      // Basic token fetch without balance first to be fast
-      const res = await fetch(`${LIFI_API_URL}/tokens?chains=${chainId}`);
+      // Always include wallet address if available to get balances
+      const walletParam = wallet.address ? `&wallet=${wallet.address}` : '';
+      const res = await fetch(`${LIFI_API_URL}/tokens?chains=${chainId}${walletParam}`);
       const data = await res.json();
       let chainTokens = data.tokens[chainId] || [];
       
+      // Update dedicated balance store
+      if (wallet.address && chainTokens.length > 0) {
+          const newBalances = {};
+          chainTokens.forEach(t => {
+              // Some tokens might return amount as '0' or null
+              if (t.amount) {
+                  newBalances[t.address.toLowerCase()] = t.amount;
+              }
+          });
+          setTokenBalances(prev => ({...prev, ...newBalances}));
+      }
+
+      // Sort by balance
+      if (wallet.address) {
+          chainTokens.sort((a, b) => {
+              const balA = parseFloat(a.amount || 0);
+              const balB = parseFloat(b.amount || 0);
+              return balB - balA; // Descending
+          });
+      }
+
       const defaultToken = chainTokens.find(t => t.symbol === 'USDC' || t.symbol === 'ETH' || t.symbol === 'USDT') || chainTokens[0];
 
       setTokens(prev => ({ ...prev, [side]: chainTokens }));
@@ -424,7 +447,7 @@ export default function LifiBridgeApp() {
     } finally {
       setLoading(prev => ({ ...prev, tokens: false }));
     }
-  }, []);
+  }, [wallet.address]); // Depend on wallet.address to re-fetch on connection
 
   useEffect(() => {
     if (isSwapping.current) return;
@@ -435,36 +458,6 @@ export default function LifiBridgeApp() {
     if (isSwapping.current) return;
     if (toChain) fetchTokens(toChain.id, 'to');
   }, [toChain, fetchTokens]);
-
-  // --- FORCE BALANCE FETCH ---
-  // Independent function to refresh balance for currently selected token
-  const refreshBalance = async () => {
-      if (!wallet.connected || !wallet.address || !fromChain || !fromToken) return;
-      
-      setLoading(prev => ({ ...prev, balance: true }));
-      try {
-          const url = `${LIFI_API_URL}/token?chain=${fromChain.id}&token=${fromToken.address}&wallet=${wallet.address}`;
-          const res = await fetch(url);
-          const data = await res.json();
-          
-          if (data) {
-                // Update global store
-                setTokenBalances(prev => ({
-                    ...prev,
-                    [fromToken.address.toLowerCase()]: data.amount || '0'
-                }));
-          }
-      } catch (e) {
-          console.error("Single balance fetch failed", e);
-      } finally {
-          setLoading(prev => ({ ...prev, balance: false }));
-      }
-  };
-
-  // Run refresh when active token/chain/wallet changes
-  useEffect(() => {
-      refreshBalance();
-  }, [wallet.address, fromChain?.id, fromToken?.address, wallet.connected]);
 
 
   // Quote
@@ -502,6 +495,7 @@ export default function LifiBridgeApp() {
         if (data.message) throw new Error(data.message);
         setQuote(data);
       } catch (err) {
+        // Only show error in UI
         console.error(err);
         setError(t('noRoute'));
       } finally {
@@ -603,15 +597,20 @@ export default function LifiBridgeApp() {
     setTimeout(() => { isSwapping.current = false; }, 800);
   };
 
+  // Percentage handler for balance
   const handlePercentageClick = (percent) => {
       const tokenAddr = fromToken?.address?.toLowerCase();
-      const rawAmount = tokenBalances[tokenAddr];
+      // Get amount from global store first, fallback to token's own amount prop
+      const rawAmount = tokenBalances[tokenAddr] || fromToken?.amount;
 
       if (rawAmount) {
           const bal = parseFloat(rawAmount) / Math.pow(10, fromToken.decimals);
           if (bal > 0) {
-              const newAmount = (bal * percent).toFixed(6); 
-              setAmount(parseFloat(newAmount).toString());
+              // Calculate
+              const newAmount = (bal * percent);
+              // Format to avoid floating point issues, keeping it clean
+              // Use fewer decimals for input to avoid scientific notation or overly long strings
+              setAmount(parseFloat(newAmount.toFixed(8)).toString());
           }
       }
   };
@@ -625,16 +624,24 @@ export default function LifiBridgeApp() {
       }
   };
 
-  // Format Balance Helper
+  // Format Balance Helper for Display
   const getBalanceForToken = (token) => {
       if (!token || !token.address) return '0';
-      const bal = tokenBalances[token.address.toLowerCase()];
+      
+      // Priority: Global Store -> Token Prop -> '0'
+      const bal = tokenBalances[token.address.toLowerCase()] || token.amount;
+      
       if (!bal || parseFloat(bal) === 0) return '0';
       
       const val = parseFloat(bal) / Math.pow(10, token.decimals);
       if (val < 0.00001) return '<0.00001';
-      return val.toLocaleString('en-US', { maximumFractionDigits: 5 });
+      // More concise display
+      return val.toLocaleString('en-US', { maximumFractionDigits: 4 });
   };
+  
+  const activeTokenBalance = getBalanceForToken(fromToken);
+  // Check if we have ANY balance to show percentage buttons
+  const hasBalance = activeTokenBalance !== '0' && activeTokenBalance !== '0.00' && activeTokenBalance !== null;
 
   // Colors based on Theme
   const isDark = theme === 'dark';
@@ -691,13 +698,7 @@ export default function LifiBridgeApp() {
                 </div>
                 <div className={`overflow-y-auto flex-1 p-2 space-y-1 ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
                     {filteredList.map((item) => {
-                        // For modal list, try to get balance if available in global store
-                        // Note: Bulk balance fetching is unreliable in API, so list might not show all balances correctly initially
-                        // But clicking will auto-fill if balance exists
-                        const balance = (!isChain && tokenBalances[item.address.toLowerCase()]) 
-                            ? (parseFloat(tokenBalances[item.address.toLowerCase()]) / Math.pow(10, item.decimals)).toLocaleString('en-US', { maximumFractionDigits: 5 })
-                            : null;
-
+                        const balance = !isChain ? getBalanceForToken(item) : null;
                         return (
                         <button
                             key={item.id || item.address}
@@ -710,9 +711,7 @@ export default function LifiBridgeApp() {
                                     else setToToken(item);
                                     
                                     if (modalOpen.side === 'from' && balance && balance !== '0') {
-                                        // Auto fill
-                                        const bal = parseFloat(tokenBalances[item.address.toLowerCase()]) / Math.pow(10, item.decimals);
-                                        setAmount(bal.toString());
+                                        handlePercentageClick(1);
                                     }
                                 }
                                 setModalOpen({ type: null });
@@ -767,8 +766,6 @@ export default function LifiBridgeApp() {
         </div>
     );
   };
-
-  const activeTokenBalance = getBalanceForToken(fromToken);
 
   return (
     <div className={`min-h-screen ${bgApp} ${textMain} font-sans relative overflow-hidden selection:bg-blue-200 selection:text-blue-900 flex flex-col transition-colors duration-500`}>
@@ -910,7 +907,7 @@ export default function LifiBridgeApp() {
                                             className={`w-full bg-transparent font-black outline-none tracking-tight [&::-webkit-inner-spin-button]:appearance-none ${getFontSize(amount)} ${inputColor}`}
                                         />
                                         {/* Percentage Buttons inside input container, below input */}
-                                        {wallet.connected && activeTokenBalance !== '0' && (
+                                        {wallet.connected && hasBalance && (
                                             <div className="flex gap-1 mt-1">
                                                 {[0.25, 0.50, 0.75, 1].map((pct) => (
                                                     <button
@@ -951,17 +948,9 @@ export default function LifiBridgeApp() {
                                             <span className={`text-blue-300`}>
                                                 {formatAddress(fromToken.address)}
                                             </span>
-                                            <div className="flex items-center gap-1">
-                                                <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                                    {t('balance')}: {activeTokenBalance}
-                                                </span>
-                                                {/* Refresh Balance Button */}
-                                                {wallet.connected && (
-                                                    <button onClick={refreshBalance} className="text-gray-400 hover:text-blue-500" title="Refresh Balance">
-                                                        <RefreshCcw size={10} className={loading.balance ? 'animate-spin' : ''} />
-                                                    </button>
-                                                )}
-                                            </div>
+                                            <button onClick={() => handlePercentageClick(1)} className={`font-bold hover:underline ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                {t('balance')}: {activeTokenBalance}
+                                            </button>
                                         </div>
                                     )}
                                 </div>
