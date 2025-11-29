@@ -85,7 +85,7 @@ const TRANSLATIONS = {
         recipientAddr: 'Alıcı Adresi',
         found: 'BULUNDU',
         balance: 'Bak:',
-        max: 'MAX',
+        max: 'MAKS',
         disclaimer: 'Fonların velayetini tutmuyoruz. Risk size aittir. Köprü ücretleri ve kayma oranları ağ koşullarına göre değişebilir.',
         rights: 'Tüm hakları saklıdır.'
     },
@@ -111,7 +111,7 @@ const TRANSLATIONS = {
         recipientAddr: 'Dirección del Destinatario',
         found: 'ENCONTRADO',
         balance: 'Bal:',
-        max: 'MAX',
+        max: 'MÁX',
         disclaimer: 'No custodiamos fondos. Úselo bajo su propio riesgo. Las tarifas pueden variar.',
         rights: 'Todos los derechos reservados.'
     },
@@ -529,6 +529,16 @@ export default function LifiBridgeApp() {
     setTimeout(() => { isSwapping.current = false; }, 800);
   };
 
+  const handlePercentageClick = (percent) => {
+      if (fromToken && fromToken.amount) {
+          const bal = parseFloat(fromToken.amount) / Math.pow(10, fromToken.decimals);
+          if (bal > 0) {
+              const newAmount = (bal * percent).toFixed(6); // Keep it clean
+              setAmount(parseFloat(newAmount).toString());
+          }
+      }
+  };
+
   // --- Render Helpers ---
   const getStatusBadge = (status) => {
       switch (status) {
@@ -540,17 +550,10 @@ export default function LifiBridgeApp() {
 
   // Format Balance Helper
   const formatBalance = (amount, decimals) => {
-      if (!amount) return '0.0';
+      if (!amount || parseFloat(amount) === 0) return '0';
       const val = parseFloat(amount) / Math.pow(10, decimals);
       if (val < 0.00001) return '<0.00001';
       return val.toLocaleString('en-US', { maximumFractionDigits: 5 });
-  };
-
-  const handleMaxClick = () => {
-      if (fromToken && fromToken.amount) {
-          const bal = parseFloat(fromToken.amount) / Math.pow(10, fromToken.decimals);
-          setAmount(bal.toString());
-      }
   };
 
   // Colors based on Theme
@@ -617,6 +620,10 @@ export default function LifiBridgeApp() {
                                 } else {
                                     if (modalOpen.side === 'from') setFromToken(item);
                                     else setToToken(item);
+                                    if (modalOpen.side === 'from' && item.amount) {
+                                        const bal = parseFloat(item.amount) / Math.pow(10, item.decimals);
+                                        setAmount(bal.toString());
+                                    }
                                 }
                                 setModalOpen({ type: null });
                                 setSearchQuery('');
@@ -798,6 +805,20 @@ export default function LifiBridgeApp() {
                                             onChange={(e) => setAmount(e.target.value)}
                                             className={`w-full bg-transparent font-black outline-none tracking-tight [&::-webkit-inner-spin-button]:appearance-none ${getFontSize(amount)} ${inputColor}`}
                                         />
+                                        {/* Percentage Buttons inside input container, below input */}
+                                        {wallet.connected && fromToken && parseFloat(fromToken.amount) > 0 && (
+                                            <div className="flex gap-1 mt-1">
+                                                {[0.25, 0.50, 0.75, 1].map((pct) => (
+                                                    <button
+                                                        key={pct}
+                                                        onClick={() => handlePercentageClick(pct)}
+                                                        className={`text-[10px] px-2 py-0.5 rounded transition-colors ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-gray-300' : 'bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium'}`}
+                                                    >
+                                                        {pct === 1 ? t('max') : `${pct * 100}%`}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                     
                                     <button 
@@ -826,11 +847,9 @@ export default function LifiBridgeApp() {
                                             <span className={`text-blue-300`}>
                                                 {formatAddress(fromToken.address)}
                                             </span>
-                                            {wallet.connected && (
-                                                <button onClick={handleMaxClick} className={`font-bold hover:underline ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>
-                                                    {t('max')} {formatBalance(fromToken.amount, fromToken.decimals) === '0.0' ? '0' : formatBalance(fromToken.amount, fromToken.decimals)}
-                                                </button>
-                                            )}
+                                            <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                                {t('balance')}: {formatBalance(fromToken.amount, fromToken.decimals)}
+                                            </span>
                                         </div>
                                     )}
                                 </div>
