@@ -59,6 +59,7 @@ const TRANSLATIONS = {
         recipientAddr: 'Recipient Address',
         found: 'FOUND',
         balance: 'Bal:',
+        max: 'MAX',
         disclaimer: 'We do not hold custody of funds. Use at your own risk. Bridge fees and slippage may vary based on network conditions.',
         rights: 'All rights reserved.'
     },
@@ -84,6 +85,7 @@ const TRANSLATIONS = {
         recipientAddr: 'Alıcı Adresi',
         found: 'BULUNDU',
         balance: 'Bak:',
+        max: 'MAX',
         disclaimer: 'Fonların velayetini tutmuyoruz. Risk size aittir. Köprü ücretleri ve kayma oranları ağ koşullarına göre değişebilir.',
         rights: 'Tüm hakları saklıdır.'
     },
@@ -109,6 +111,7 @@ const TRANSLATIONS = {
         recipientAddr: 'Dirección del Destinatario',
         found: 'ENCONTRADO',
         balance: 'Bal:',
+        max: 'MAX',
         disclaimer: 'No custodiamos fondos. Úselo bajo su propio riesgo. Las tarifas pueden variar.',
         rights: 'Todos los derechos reservados.'
     },
@@ -134,6 +137,7 @@ const TRANSLATIONS = {
         recipientAddr: 'Adresse Destinataire',
         found: 'TROUVÉ',
         balance: 'Solde:',
+        max: 'MAX',
         disclaimer: 'Nous ne détenons pas les fonds. À vos risques. Les frais peuvent varier.',
         rights: 'Tous droits réservés.'
     },
@@ -159,6 +163,7 @@ const TRANSLATIONS = {
         recipientAddr: '接收地址',
         found: '已找到',
         balance: '余额:',
+        max: '最大',
         disclaimer: '我们要不持有资金。风险自负。费用可能因网络状况而异。',
         rights: '版权所有.'
     },
@@ -184,6 +189,7 @@ const TRANSLATIONS = {
         recipientAddr: '受取人アドレス',
         found: '見つかりました',
         balance: '残高:',
+        max: '最大',
         disclaimer: '資金は保管しません。自己責任で使用してください。手数料は変動する可能性があります。',
         rights: '全著作権所有.'
     }
@@ -540,6 +546,13 @@ export default function LifiBridgeApp() {
       return val.toLocaleString('en-US', { maximumFractionDigits: 5 });
   };
 
+  const handleMaxClick = () => {
+      if (fromToken && fromToken.amount) {
+          const bal = parseFloat(fromToken.amount) / Math.pow(10, fromToken.decimals);
+          setAmount(bal.toString());
+      }
+  };
+
   // Colors based on Theme
   const isDark = theme === 'dark';
   const bgApp = isDark ? 'bg-slate-950' : 'bg-white';
@@ -604,10 +617,6 @@ export default function LifiBridgeApp() {
                                 } else {
                                     if (modalOpen.side === 'from') setFromToken(item);
                                     else setToToken(item);
-                                    if (modalOpen.side === 'from' && item.amount) {
-                                        const bal = parseFloat(item.amount) / Math.pow(10, item.decimals);
-                                        setAmount(bal.toString());
-                                    }
                                 }
                                 setModalOpen({ type: null });
                                 setSearchQuery('');
@@ -641,7 +650,7 @@ export default function LifiBridgeApp() {
                                     ) }
                                 </div>
                                 {/* BALANCE DISPLAY */}
-                                {!isChain && item.amount && parseFloat(item.amount) > 0 && (
+                                {!isChain && item.amount && (
                                     <div className="text-right">
                                         <div className={`text-xs font-bold ${textMain}`}>{formatBalance(item.amount, item.decimals)}</div>
                                         <div className="text-[10px] text-gray-400">{t('balance')}</div>
@@ -688,7 +697,7 @@ export default function LifiBridgeApp() {
             </button>
 
             {/* Language Selector */}
-            <div className={`flex items-center rounded-full transition-all duration-500 ease-in-out overflow-hidden ${langMenuOpen ? 'w-64' : 'w-12'} ${isDark ? 'bg-slate-800' : 'bg-white shadow-sm border border-gray-100'}`}>
+            <div className={`flex items-center rounded-full transition-all duration-500 ease-in-out overflow-hidden ${langMenuOpen ? 'w-52' : 'w-12'} ${isDark ? 'bg-slate-800' : 'bg-white shadow-sm border border-gray-100'}`}>
                 <button
                     onClick={() => setLangMenuOpen(!langMenuOpen)}
                     className={`w-12 h-10 flex-shrink-0 flex items-center justify-center font-bold text-xs ${isDark ? 'text-white' : 'text-gray-700'}`}
@@ -787,7 +796,7 @@ export default function LifiBridgeApp() {
                                             placeholder="0"
                                             value={amount}
                                             onChange={(e) => setAmount(e.target.value)}
-                                            className={`w-full bg-transparent font-black outline-none tracking-tight ${getFontSize(amount)} ${inputColor}`}
+                                            className={`w-full bg-transparent font-black outline-none tracking-tight [&::-webkit-inner-spin-button]:appearance-none ${getFontSize(amount)} ${inputColor}`}
                                         />
                                     </div>
                                     
@@ -812,7 +821,18 @@ export default function LifiBridgeApp() {
                                             <span>≈ {formatUSD(amount, fromToken.priceUSD)}</span>
                                         )}
                                     </div>
-                                    {fromToken && <span className="text-[10px] text-blue-300 font-mono">{formatAddress(fromToken.address)}</span>}
+                                    {fromToken && (
+                                        <div className="flex items-center gap-2 text-[10px] font-mono">
+                                            <span className={`text-blue-300`}>
+                                                {formatAddress(fromToken.address)}
+                                            </span>
+                                            {wallet.connected && (
+                                                <button onClick={handleMaxClick} className={`font-bold hover:underline ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>
+                                                    {t('max')} {formatBalance(fromToken.amount, fromToken.decimals) === '0.0' ? '0' : formatBalance(fromToken.amount, fromToken.decimals)}
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
