@@ -619,7 +619,7 @@ export default function LifiBridgeApp() {
                                 src={item.logoURI || 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/default_token.png'} 
                                 onError={(e) => { e.target.src = 'https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/default_token.png' }}
                                 alt={item.name} 
-                                className={`w-10 h-10 rounded-full shadow-sm object-cover p-0.5 ${isDark ? 'bg-transparent' : 'bg-white'}`}
+                                className={`w-10 h-10 rounded-full object-cover p-0.5 ${isDark ? 'bg-transparent' : 'bg-white shadow-sm'}`}
                             />
                             <div className="min-w-0 flex-1 flex justify-between items-center">
                                 <div>
@@ -793,13 +793,13 @@ export default function LifiBridgeApp() {
                                     
                                     <button 
                                         onClick={() => { setModalOpen({ type: 'token', side: 'from' }); setSearchQuery(''); }}
-                                        className="shrink-0 flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:scale-105 transition-all"
+                                        className={`shrink-0 flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full ${isDark ? '' : 'shadow-lg shadow-blue-200 hover:shadow-blue-300'} hover:scale-110 transition-all`}
                                     >
                                         {loading.tokens ? (
                                             <Loader2 className="animate-spin w-5 h-5" />
                                         ) : fromToken ? (
                                             <>
-                                                <img src={fromToken.logoURI} className="w-6 h-6 rounded-full" alt="" />
+                                                <img src={fromToken.logoURI} className="w-6 h-6 rounded-full bg-white/20" alt="" />
                                                 <span className="font-bold">{fromToken.symbol}</span>
                                                 <ChevronDown size={14} className="text-blue-200" />
                                             </>
@@ -852,7 +852,7 @@ export default function LifiBridgeApp() {
                                     </div>
                                     <button 
                                         onClick={() => { setModalOpen({ type: 'token', side: 'to' }); setSearchQuery(''); }}
-                                        className="shrink-0 flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:scale-105 transition-all"
+                                        className={`shrink-0 flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full ${isDark ? '' : 'shadow-lg shadow-blue-200 hover:shadow-blue-300'} hover:scale-110 transition-all`}
                                     >
                                         {toToken ? (
                                             <>
